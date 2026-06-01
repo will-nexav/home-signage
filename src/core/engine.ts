@@ -200,14 +200,14 @@ export const NW_SEED: NWState = {
 };
 
 export const HEALTH_SEED: HealthState = {
-  weight: 185,
-  weightTarget: 165,
-  vo2max: 38,
-  vo2maxTarget: 45,
-  sleep: 6.5,
-  sleepTarget: 7.5,
-  strength: 185,
-  strengthTarget: 225,
+  weight: 0,
+  weightTarget: 0,
+  vo2max: 0,
+  vo2maxTarget: 0,
+  sleep: 0,
+  sleepTarget: 0,
+  strength: 0,
+  strengthTarget: 0,
   history: [],
 };
 

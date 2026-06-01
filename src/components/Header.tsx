@@ -20,7 +20,7 @@ export default function Header({ xp, level, onNav, currentView }: HeaderProps) {
     { id: 'home',     label: '⚔ Quests'  },
     { id: 'today',    label: '📅 Today'   },
     { id: 'stats',    label: '📊 Stats'   },
-    { id: 'overview', label: '💎 Wealth'  },
+    { id: 'overview', label: '💰 Overview' },
   ];
 
   return (

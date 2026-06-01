@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Header from './components/Header';
 import XpDropStack from './components/XpDropStack';
 import LevelUpModal from './components/LevelUpModal';
@@ -42,13 +42,12 @@ export default function App() {
   useEffect(() => { saveJSON(HEALTH_KEY, health); }, [health]);
   useEffect(() => { saveJSON(BIZ_KEY, biz); }, [biz]);
 
-  const checkLevelUp = useCallback((newXp: number, oldLevel: number) => {
-    const newLevel = getLevel(newXp).level;
-    if (newLevel > oldLevel) {
-      SFX.levelUp();
-      setLevelUpInfo(getLevel(newXp));
-    }
-  }, []);
+
+  function totalXp(cats: AppState['cats'], habits: AppState['habits']) {
+    const taskXp = computeXp(cats);
+    const habitXp = habits.reduce((s, h) => s + h.days.length * h.xp, 0);
+    return taskXp + habitXp;
+  }
 
   function handleTaskToggle(catId: string, taskId: string) {
     const oldLevel = state.level;
@@ -71,18 +70,20 @@ export default function App() {
           })),
         };
       });
-      const newXp = computeXp(newCats);
-      const newLevel = getLevel(newXp).level;
-      setTimeout(() => checkLevelUp(newXp, oldLevel), 50);
-      return { ...prev, cats: newCats, xp: newXp, level: newLevel };
+      const newXp = totalXp(newCats, prev.habits);
+      const newLevelInfo = getLevel(newXp);
+      if (newLevelInfo.level > oldLevel) {
+        setTimeout(() => { SFX.levelUp(); setLevelUpInfo(newLevelInfo); }, 50);
+      }
+      return { ...prev, cats: newCats, xp: newXp, level: newLevelInfo.level };
     });
   }
 
   function handleHabitToggle(habitId: string) {
     const today = todayStr();
-    setState(prev => ({
-      ...prev,
-      habits: prev.habits.map(h => {
+    const oldLevel = state.level;
+    setState(prev => {
+      const newHabits = prev.habits.map(h => {
         if (h.id !== habitId) return h;
         const isDone = h.days.includes(today);
         const newDays = isDone ? h.days.filter(d => d !== today) : [...h.days, today];
@@ -91,8 +92,14 @@ export default function App() {
           QuestFX.emit(h.label, h.xp);
         }
         return { ...h, days: newDays };
-      }),
-    }));
+      });
+      const newXp = totalXp(prev.cats, newHabits);
+      const newLevelInfo = getLevel(newXp);
+      if (newLevelInfo.level > oldLevel) {
+        setTimeout(() => { SFX.levelUp(); setLevelUpInfo(newLevelInfo); }, 50);
+      }
+      return { ...prev, habits: newHabits, xp: newXp, level: newLevelInfo.level };
+    });
   }
 
   function handleDailyToggle(taskId: string) {

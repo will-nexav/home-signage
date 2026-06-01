@@ -47,7 +47,7 @@ export const LEVELS: LevelInfo[] = [
 ];
 
 export const HABITS_SEED: Omit<Habit, 'days'>[] = [
-  { id: 'h-wake',    label: 'Wake before 7 AM',          icon: '🌅', xp: 15 },
+  { id: 'h-wake',    label: 'Wake by 7:30 AM',            icon: '🌅', xp: 15 },
   { id: 'h-pray',    label: 'Morning prayer & gratitude', icon: '🙏', xp: 20 },
   { id: 'h-workout', label: 'Workout / physical training',icon: '⚔️', xp: 25 },
   { id: 'h-read',    label: 'Read 20+ minutes',           icon: '📖', xp: 15 },

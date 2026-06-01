@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Panel from '../components/Panel';
 import Spark from '../components/Spark';
 import EditNum from '../components/EditNum';
@@ -15,7 +16,23 @@ let idCtr = Date.now();
 
 function uid() { return `nw-${++idCtr}`; }
 
+function parsePaste(text: string): { label: string; value: number }[] {
+  return text.split('\n')
+    .map(line => line.trim())
+    .filter(Boolean)
+    .map(line => {
+      const parts = line.split(/[\t,]/).map(p => p.trim());
+      const label = parts[0] || 'Item';
+      const raw = (parts[1] || '').replace(/[$,\s]/g, '');
+      const value = parseFloat(raw) || 0;
+      return { label, value };
+    })
+    .filter(r => r.value !== 0 || r.label !== 'Item');
+}
+
 export default function NetWorthView({ state, onChange, onBack }: NetWorthViewProps) {
+  const [importMode, setImportMode] = useState<'assets' | 'liabilities' | null>(null);
+  const [importText, setImportText] = useState('');
   const ym = currentYM();
   let snap = state.snapshots.find(s => s.ym === ym);
   if (!snap) {
@@ -77,6 +94,20 @@ export default function NetWorthView({ state, onChange, onBack }: NetWorthViewPr
       ? { ...s, liabilities: s.liabilities.filter(l => l.id !== id) }
       : s);
     onChange({ ...state, snapshots: newSnaps });
+  }
+
+  function applyImport() {
+    const rows = parsePaste(importText);
+    if (!rows.length) return;
+    const newItems = rows.map(r => ({ id: uid(), label: r.label, value: r.value }));
+    const newSnaps = state.snapshots.map(s => {
+      if (s.ym !== ym) return s;
+      if (importMode === 'assets') return { ...s, assets: [...s.assets, ...newItems] };
+      return { ...s, liabilities: [...s.liabilities, ...newItems] };
+    });
+    onChange({ ...state, snapshots: newSnaps });
+    setImportText('');
+    setImportMode(null);
   }
 
   return (
@@ -143,6 +174,40 @@ export default function NetWorthView({ state, onChange, onBack }: NetWorthViewPr
           <button className="ghost-btn" style={{ marginTop: 8, width: '100%' }} onClick={addLiab}>+ Add Liability</button>
         </Panel>
       </div>
+
+      {/* Excel / CSV import */}
+      <Panel style={{ padding: '16px 18px', marginTop: 16 }}>
+        <p className="eyebrow" style={{ marginBottom: 10 }}>Import from Excel / CSV</p>
+        <p style={{ fontSize: 12, color: 'var(--ink-soft)', marginBottom: 12, lineHeight: 1.5 }}>
+          Copy two columns from Excel (Label, Value) and paste below. Tab or comma separated, one row per line.
+        </p>
+        <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
+          <button className={`ghost-btn${importMode === 'assets' ? ' tab-active' : ''}`}
+            onClick={() => setImportMode(importMode === 'assets' ? null : 'assets')}>
+            Import as Assets
+          </button>
+          <button className={`ghost-btn${importMode === 'liabilities' ? ' tab-active' : ''}`}
+            onClick={() => setImportMode(importMode === 'liabilities' ? null : 'liabilities')}>
+            Import as Liabilities
+          </button>
+        </div>
+        {importMode && (
+          <>
+            <textarea
+              className="tome-input"
+              rows={6}
+              style={{ width: '100%', resize: 'vertical', fontFamily: 'JetBrains Mono, monospace', fontSize: 12 }}
+              placeholder={"Cash & Checking\t24000\nBrokerage\t38000\nRetirement\t31000"}
+              value={importText}
+              onChange={e => setImportText(e.target.value)}
+            />
+            <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+              <button className="levelup-btn" onClick={applyImport}>Apply Import</button>
+              <button className="ghost-btn" onClick={() => { setImportMode(null); setImportText(''); }}>Cancel</button>
+            </div>
+          </>
+        )}
+      </Panel>
     </div>
   );
 }
