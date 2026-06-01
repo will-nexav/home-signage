@@ -26,6 +26,7 @@ export interface Habit {
   icon: string;
   xp: number;
   days: string[]; // ISO date strings
+  lateSessions?: string[]; // ISO date strings — productive late nights, grace on wake time
 }
 
 export interface AppState {

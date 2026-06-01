@@ -102,6 +102,19 @@ export default function App() {
     });
   }
 
+  function handleLateSession(habitId: string) {
+    const today = todayStr();
+    setState(prev => ({
+      ...prev,
+      habits: prev.habits.map(h => {
+        if (h.id !== habitId) return h;
+        const sessions = h.lateSessions || [];
+        const isOn = sessions.includes(today);
+        return { ...h, lateSessions: isOn ? sessions.filter(d => d !== today) : [...sessions, today] };
+      }),
+    }));
+  }
+
   function handleDailyToggle(taskId: string) {
     setChecklist(prev => {
       const task = prev.daily.find(t => t.id === taskId);
@@ -188,6 +201,7 @@ export default function App() {
             state={state}
             onCatClick={id => setView('category:' + id)}
             onHabitToggle={handleHabitToggle}
+            onLateSession={handleLateSession}
           />
         )}
 
