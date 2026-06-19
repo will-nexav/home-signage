@@ -34,7 +34,8 @@ export function catStats(cat: Category) {
 }
 
 export function grpStats(grp: Category['groups'][number]) {
-  let done = 0, total = grp.tasks.length, xpEarned = 0, xpTotal = 0;
+  let done = 0, xpEarned = 0, xpTotal = 0;
+  const total = grp.tasks.length;
   for (const task of grp.tasks) {
     xpTotal += task.xp;
     if (task.done) { done++; xpEarned += task.xp; }
