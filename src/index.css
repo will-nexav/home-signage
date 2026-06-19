@@ -94,3 +94,4 @@ body::before {
 .day-cell:hover { transform: translateY(-2px); }
 .energy-dot { width: 44px; height: 44px; border-radius: 50%; border: 1px solid; cursor: pointer; font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 700; transition: all .15s; }
 .energy-dot:hover { transform: scale(1.08); }
+.skill-row-tap:hover { transform: translateY(-2px); border-color: rgba(236,212,155,0.35) !important; }

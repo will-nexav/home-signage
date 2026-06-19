@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import type { GymState, Intensity } from './types';
 import {
   loadGym, saveGym, freshState, sessionPayout, totalLevel, totalXp,
-  daysThisWeek, weekStreak, dayStreak, genSessionId,
+  daysThisWeek, weekStreak, dayStreak, genSessionId, cumulative,
 } from './storage';
 import { SKILLS, skillLevel, skillDef } from './skills';
 import { todayStr } from '../core/engine';
@@ -13,6 +13,9 @@ import SkillBar from './components/SkillBar';
 import LogSheet from './components/LogSheet';
 import SessionLog from './components/SessionLog';
 import SkillLevelUpModal from './components/SkillLevelUpModal';
+import SkillDetail from './components/SkillDetail';
+import QuickWins from './components/QuickWins';
+import Chart from './components/Chart';
 
 interface PendingLU { skillId: string; level: number; }
 
@@ -21,8 +24,16 @@ export default function GymApp() {
   const [sheet, setSheet] = useState(false);
   const [luQueue, setLuQueue] = useState<PendingLU[]>([]);
   const [flash, setFlash] = useState<string[]>([]);
+  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => { saveGym(state); }, [state]);
+
+  // cumulative total-XP curve across all sessions
+  const totalCurve = cumulative(
+    [...state.sessions]
+      .sort((a, b) => a.ts - b.ts)
+      .map(s => Object.values(s.xp).reduce((a, b) => a + b, 0))
+  );
 
   const tLevel = totalLevel(state.skillXp);
   const tXp = totalXp(state.skillXp);
@@ -91,6 +102,17 @@ export default function GymApp() {
     setState(freshState());
   }
 
+  if (selected) {
+    return (
+      <SkillDetail
+        skillId={selected}
+        xp={state.skillXp[selected] || 0}
+        sessions={state.sessions}
+        onBack={() => setSelected(null)}
+      />
+    );
+  }
+
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 18px 60px' }}>
       {/* Header */}
@@ -145,13 +167,26 @@ export default function GymApp() {
         </button>
       </div>
 
+      {/* Quick wins — the closest dings */}
+      <QuickWins skillXp={state.skillXp} onTrain={() => setSheet(true)} />
+
       {/* Skills */}
-      <p className="eyebrow" style={{ marginBottom: 11 }}>Skills</p>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: 11 }}>
+        <p className="eyebrow">Skills</p>
+        <span style={{ fontSize: 10.5, color: 'var(--ink-faint)' }}>tap a skill for its chart →</span>
+      </div>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 9, marginBottom: 28 }}>
         {SKILLS.map(s => (
-          <SkillBar key={s.id} id={s.id} xp={state.skillXp[s.id] || 0} highlight={flash.includes(s.id)} />
+          <SkillBar key={s.id} id={s.id} xp={state.skillXp[s.id] || 0} highlight={flash.includes(s.id)} onClick={() => setSelected(s.id)} />
         ))}
       </div>
+
+      {/* Progress chart */}
+      {state.sessions.length >= 2 && (
+        <div style={{ marginBottom: 28 }}>
+          <Chart points={totalCurve} label="Total XP over time" height={130} />
+        </div>
+      )}
 
       {/* History */}
       <p className="eyebrow" style={{ marginBottom: 7 }}>Training Log</p>

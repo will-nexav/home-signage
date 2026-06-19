@@ -113,3 +113,10 @@ export function dayStreak(sessions: GymSession[]): number {
 export function genSessionId(): string {
   return `s-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
 }
+
+// Running total of a series, prefixed with a leading 0 (for chart baselines).
+export function cumulative(values: number[]): number[] {
+  const out = [0];
+  for (const v of values) out.push(out[out.length - 1] + v);
+  return out;
+}
