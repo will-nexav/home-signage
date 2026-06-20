@@ -1,32 +1,25 @@
-export type Activity = 'cardio' | 'bench' | 'curl' | 'pullups' | 'stretch';
+export type Activity =
+  | 'cardio' | 'bench' | 'curl' | 'pullups' | 'pushups' | 'dips'
+  | 'biceps' | 'chest' | 'rehab' | 'mobility' | 'meditate';
 
-// A single logged entry. Benchmark activities carry a measured value; all
-// activities feed the consistency skills (Constitution / Mobility).
 export interface LogEntry {
   id: string;
   date: string;        // local YYYY-MM-DD
   ts: number;          // epoch ms
   activity: Activity;
-  minutes?: number;    // cardio test result (Mitch's treadmill protocol)
-  weight?: number;     // bench/curl: weight per hand, in lb
-  reps?: number;       // bench/curl/pullups reps
+  minutes?: number;    // cardio test / meditation minutes
+  weight?: number;     // bench/curl: weight per hand (lb)
+  reps?: number;       // bench/curl/pullups/pushups/dips
+  measure?: number;    // biceps/chest circumference (cm)
   note?: string;
 }
 
 export interface GymState {
   log: LogEntry[];
-  bodyweightLb: number; // for strength-to-bodyweight ratios
-  weeklyGoal: number;   // cardio sessions per week
+  unlockedFeats: string[]; // Magic — trick ids unlocked
+  bodyweightLb: number;
+  weeklyGoal: number;      // cardio sessions per week
   created: string;
 }
 
-// Levels for every tracked skill (the 4 headline + 3 strength sub-skills).
-export interface Levels {
-  constitution: number;
-  mobility: number;
-  endurance: number;
-  bench: number;
-  curl: number;
-  pullups: number;
-  strength: number; // average of bench/curl/pullups
-}
+export type Levels = Record<string, number>;

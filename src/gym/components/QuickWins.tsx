@@ -1,19 +1,18 @@
-import type { GymState, Levels } from '../types';
+import type { GymState } from '../types';
 import { skillView } from '../storage';
 import { skillDef } from '../skills';
 
 interface Props {
   state: GymState;
-  levels: Levels;
   onTrain: () => void;
 }
 
-// Rank the trackable skills by how little effort the next level takes.
-const RANKABLE = ['pullups', 'bench', 'curl', 'endurance', 'constitution', 'mobility'];
+// Trackable skills ranked by how little effort the next level takes.
+const RANKABLE = ['pullups', 'pushups', 'dips', 'bench', 'curl', 'biceps', 'chest', 'constitution', 'defence', 'agility', 'prayer'];
 
-export default function QuickWins({ state, levels, onTrain }: Props) {
+export default function QuickWins({ state, onTrain }: Props) {
   const wins = RANKABLE
-    .map(id => skillView(state, id, levels))
+    .map(id => skillView(state, id))
     .filter(v => !v.untested && isFinite(v.effort))
     .sort((a, b) => a.effort - b.effort)
     .slice(0, 3);

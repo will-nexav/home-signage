@@ -1,9 +1,12 @@
-import type { LogEntry } from '../types';
+import type { LogEntry, Activity } from '../types';
 import { skillDef } from '../skills';
 
 interface Props { log: LogEntry[]; }
 
-const ACT_SKILL: Record<string, string> = { cardio: 'endurance', bench: 'bench', curl: 'curl', pullups: 'pullups', stretch: 'mobility' };
+const ACT_SKILL: Record<Activity, string> = {
+  cardio: 'constitution', bench: 'bench', curl: 'curl', pullups: 'pullups', pushups: 'pushups',
+  dips: 'dips', biceps: 'biceps', chest: 'chest', rehab: 'defence', mobility: 'agility', meditate: 'prayer',
+};
 
 function relDay(date: string): string {
   const d = new Date(date + 'T00:00:00');
@@ -20,7 +23,13 @@ function summary(e: LogEntry): string {
     case 'bench': return `Bench ${e.weight}lb × ${e.reps}`;
     case 'curl': return `Curl ${e.weight}lb × ${e.reps}`;
     case 'pullups': return `Pull-ups × ${e.reps}`;
-    case 'stretch': return 'Stretch / mobility';
+    case 'pushups': return `Push-ups × ${e.reps}`;
+    case 'dips': return `Dips × ${e.reps}`;
+    case 'biceps': return `Biceps ${e.measure} cm`;
+    case 'chest': return `Chest ${e.measure} cm`;
+    case 'rehab': return 'Back / hand rehab';
+    case 'mobility': return 'Mobility / stretch';
+    case 'meditate': return e.minutes != null ? `Meditation — ${e.minutes} min` : 'Meditation';
   }
 }
 
