@@ -1,6 +1,6 @@
 export type Activity =
   | 'cardio' | 'bench' | 'curl' | 'tricep' | 'pullups' | 'pushups' | 'dips'
-  | 'biceps' | 'chest' | 'legs' | 'mobility' | 'meditate';
+  | 'core' | 'legs' | 'mobility' | 'meditate';
 
 export interface LogEntry {
   id: string;
@@ -8,9 +8,9 @@ export interface LogEntry {
   ts: number;          // epoch ms
   activity: Activity;
   minutes?: number;    // cardio test / meditation minutes
-  weight?: number;     // bench/curl: weight per hand (lb)
-  reps?: number;       // bench/curl/pullups/pushups/dips
-  measure?: number;    // biceps/chest circumference (cm)
+  weight?: number;     // bench/curl/tricep/legs: working weight (lb)
+  reps?: number;       // bench/curl/tricep/legs/pullups/pushups/dips
+  seconds?: number;    // core: plank hold (s)
   note?: string;
 }
 

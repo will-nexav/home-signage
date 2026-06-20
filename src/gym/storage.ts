@@ -51,9 +51,9 @@ export function bestForSkill(state: GymState, id: string): Best | null {
 function hasMetric(id: string, e: LogEntry): boolean {
   switch (id) {
     case 'constitution': return e.minutes != null;
-    case 'biceps': case 'chest': return e.measure != null;
+    case 'attack': return e.seconds != null;
     case 'pullups': case 'pushups': case 'dips': return e.reps != null;
-    case 'bench': case 'curl': case 'tricep': return e.weight != null && e.reps != null;
+    case 'bench': case 'curl': case 'tricep': case 'defence': return e.weight != null && e.reps != null;
     default: return false;
   }
 }
@@ -104,6 +104,7 @@ export function skillView(state: GymState, id: string): SkillView {
   const base = (o: Partial<SkillView>): SkillView => ({
     id, level: 1, pct: 0, stat: '', caption: '', need: '', nextLevel: 2, effort: Infinity, untested: false, ...o,
   });
+  if (!def) return base({ untested: true });
 
   if (def.kind === 'aggregate') {
     const subs = SUBS[id].map(s => skillView(state, s));
@@ -187,7 +188,8 @@ export function benchmarkSeries(state: GymState, id: string): number[] {
   return entries.map(e => {
     switch (id) {
       case 'constitution': return e.minutes || 0;
-      case 'biceps': case 'chest': return e.measure || 0;
+      case 'attack': return e.seconds || 0;
+      case 'defence': return Math.round(epley(e.weight || 0, e.reps || 0));
       case 'pullups': case 'pushups': case 'dips': return e.reps || 0;
       case 'bench': return Math.round(epley((e.weight || 0) * 2, e.reps || 0));
       case 'curl': case 'tricep': return Math.round(epley(e.weight || 0, e.reps || 0));

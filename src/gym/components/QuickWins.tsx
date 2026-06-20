@@ -8,7 +8,7 @@ interface Props {
 }
 
 // Trackable skills ranked by how little effort the next level takes.
-const RANKABLE = ['pullups', 'pushups', 'dips', 'bench', 'curl', 'biceps', 'chest', 'constitution', 'defence', 'agility', 'prayer'];
+const RANKABLE = ['pullups', 'pushups', 'dips', 'bench', 'curl', 'tricep', 'attack', 'defence', 'constitution', 'agility', 'prayer'];
 
 export default function QuickWins({ state, onTrain }: Props) {
   const wins = RANKABLE

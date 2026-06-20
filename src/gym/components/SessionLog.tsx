@@ -4,8 +4,8 @@ import { skillDef } from '../skills';
 interface Props { log: LogEntry[]; }
 
 const ACT_SKILL: Record<Activity, string> = {
-  cardio: 'constitution', bench: 'bench', curl: 'curl', tricep: 'tricep', pullups: 'pullups', pushups: 'pushups',
-  dips: 'dips', biceps: 'biceps', chest: 'chest', legs: 'defence', mobility: 'agility', meditate: 'prayer',
+  cardio: 'constitution', core: 'attack', bench: 'bench', curl: 'curl', tricep: 'tricep', pullups: 'pullups',
+  pushups: 'pushups', dips: 'dips', legs: 'defence', mobility: 'agility', meditate: 'prayer',
 };
 
 function relDay(date: string): string {
@@ -20,15 +20,14 @@ function relDay(date: string): string {
 function summary(e: LogEntry): string {
   switch (e.activity) {
     case 'cardio': return e.minutes != null ? `Treadmill test — ${e.minutes} min` : 'Cardio session';
+    case 'core': return `Plank — ${e.seconds}s`;
     case 'bench': return `Bench ${e.weight}lb × ${e.reps}`;
     case 'curl': return `Curl ${e.weight}lb × ${e.reps}`;
     case 'tricep': return `Tricep ext ${e.weight}lb × ${e.reps}`;
     case 'pullups': return `Pull-ups × ${e.reps}`;
     case 'pushups': return `Push-ups × ${e.reps}`;
     case 'dips': return `Dips × ${e.reps}`;
-    case 'biceps': return `Biceps ${e.measure}"`;
-    case 'chest': return `Chest ${e.measure}"`;
-    case 'legs': return 'Leg day';
+    case 'legs': return `Squat ${e.weight}lb × ${e.reps}`;
     case 'mobility': return 'Mobility / stretch';
     case 'meditate': return e.minutes != null ? `Meditation — ${e.minutes} min` : 'Meditation';
   }

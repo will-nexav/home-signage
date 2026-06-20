@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { Activity } from '../types';
 import { skillDef } from '../skills';
 
-export interface LogInput { activity: Activity; minutes?: number; weight?: number; reps?: number; measure?: number; note?: string; }
+export interface LogInput { activity: Activity; minutes?: number; weight?: number; reps?: number; seconds?: number; note?: string; }
 
 interface Props {
   onConfirm: (input: LogInput) => void;
@@ -12,21 +12,21 @@ interface Props {
 
 const LOG_SKILLS: { id: string; acts: Activity[] }[] = [
   { id: 'constitution', acts: ['cardio'] },
-  { id: 'attack', acts: ['biceps', 'chest'] },
+  { id: 'attack', acts: ['core'] },
   { id: 'strength', acts: ['bench', 'curl', 'tricep'] },
-  { id: 'ranged', acts: ['pullups', 'pushups', 'dips'] },
   { id: 'defence', acts: ['legs'] },
+  { id: 'ranged', acts: ['pullups', 'pushups', 'dips'] },
   { id: 'agility', acts: ['mobility'] },
   { id: 'prayer', acts: ['meditate'] },
 ];
 const ACT_SKILL: Record<Activity, string> = {
-  cardio: 'constitution', biceps: 'biceps', chest: 'chest', bench: 'bench', curl: 'curl', tricep: 'tricep',
+  cardio: 'constitution', core: 'attack', bench: 'bench', curl: 'curl', tricep: 'tricep',
   pullups: 'pullups', pushups: 'pushups', dips: 'dips', legs: 'defence', mobility: 'agility', meditate: 'prayer',
 };
-type InputKind = 'minutes' | 'measure' | 'wr' | 'reps' | 'none';
+type InputKind = 'minutes' | 'seconds' | 'wr' | 'reps' | 'none';
 const INPUT: Record<Activity, InputKind> = {
-  cardio: 'minutes', meditate: 'minutes', biceps: 'measure', chest: 'measure',
-  bench: 'wr', curl: 'wr', tricep: 'wr', pullups: 'reps', pushups: 'reps', dips: 'reps', legs: 'none', mobility: 'none',
+  cardio: 'minutes', meditate: 'minutes', core: 'seconds',
+  bench: 'wr', curl: 'wr', tricep: 'wr', legs: 'wr', pullups: 'reps', pushups: 'reps', dips: 'reps', mobility: 'none',
 };
 
 export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
@@ -36,7 +36,7 @@ export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
   const [minutes, setMinutes] = useState('');
   const [weight, setWeight] = useState('');
   const [reps, setReps] = useState('');
-  const [measure, setMeasure] = useState('');
+  const [seconds, setSeconds] = useState('');
   const [note, setNote] = useState('');
 
   function pickSkill(id: string) {
@@ -45,12 +45,12 @@ export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
   }
 
   const kind = INPUT[activity];
-  const canSubmit = kind === 'minutes' || kind === 'none' ? true : kind === 'measure' ? !!measure : kind === 'reps' ? !!reps : !!weight && !!reps;
+  const canSubmit = kind === 'minutes' || kind === 'none' ? true : kind === 'seconds' ? !!seconds : kind === 'reps' ? !!reps : !!weight && !!reps;
 
   function submit() {
     const input: LogInput = { activity, note: note.trim() || undefined };
     if (kind === 'minutes' && minutes) input.minutes = parseFloat(minutes);
-    if (kind === 'measure' && measure) input.measure = parseFloat(measure);
+    if (kind === 'seconds' && seconds) input.seconds = parseFloat(seconds);
     if (kind === 'reps' && reps) input.reps = parseInt(reps);
     if (kind === 'wr') { if (weight) input.weight = parseFloat(weight); if (reps) input.reps = parseInt(reps); }
     onConfirm(input);
@@ -95,12 +95,12 @@ export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
             <NumInput value={minutes} onChange={setMinutes} placeholder="e.g. 18.5" />
           </Field>
         )}
-        {kind === 'measure' && <Field label="Circumference (inches)"><NumInput value={measure} onChange={setMeasure} placeholder={activity === 'biceps' ? '14.5' : '41'} /></Field>}
+        {kind === 'seconds' && <Field label="Plank hold — seconds"><NumInput value={seconds} onChange={setSeconds} placeholder="e.g. 90" /></Field>}
         {kind === 'reps' && <Field label="Max consecutive reps"><NumInput value={reps} onChange={setReps} placeholder="e.g. 8" /></Field>}
         {kind === 'wr' && (
           <div style={{ display: 'flex', gap: 10 }}>
-            <Field label="Weight / hand (lb)"><NumInput value={weight} onChange={setWeight} placeholder={activity === 'bench' ? '35' : '25'} /></Field>
-            <Field label="Reps"><NumInput value={reps} onChange={setReps} placeholder="8" /></Field>
+            <Field label={activity === 'legs' ? 'Squat load (lb)' : 'Weight / hand (lb)'}><NumInput value={weight} onChange={setWeight} placeholder={activity === 'legs' ? '185' : activity === 'bench' ? '35' : '25'} /></Field>
+            <Field label="Reps"><NumInput value={reps} onChange={setReps} placeholder={activity === 'legs' ? '5' : '8'} /></Field>
           </div>
         )}
         {kind === 'none' && (

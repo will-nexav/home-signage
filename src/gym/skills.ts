@@ -27,14 +27,12 @@ const AMBER = { bar: 'linear-gradient(90deg,#c2682f,#f0a35a)', color: '#f0a35a',
 
 export const SKILLS: Record<string, SkillDef> = {
   constitution: { id: 'constitution', label: 'Constitution', icon: '❤️', blurb: "Cardio engine — Mitch's treadmill test.", kind: 'benchmark', group: 'combat', activity: 'cardio', unit: 'min', ...RED },
-  attack:       { id: 'attack',       label: 'Attack',       icon: '⚔️', blurb: 'Aesthetics — biceps & chest size.',     kind: 'aggregate', group: 'combat', ...GOLD },
-  biceps:       { id: 'biceps',       label: 'Biceps',       icon: '🦾', blurb: 'Flexed arm circumference.',             kind: 'benchmark', group: 'combat', activity: 'biceps', unit: 'in', ...GOLD },
-  chest:        { id: 'chest',        label: 'Chest',        icon: '🫁', blurb: 'Chest circumference.',                  kind: 'benchmark', group: 'combat', activity: 'chest', unit: 'in', ...GOLD },
-  strength:     { id: 'strength',     label: 'Strength',     icon: '💪', blurb: 'Weighted lifts — bench, curl, tricep.', kind: 'aggregate', group: 'combat', ...RED },
+  attack:       { id: 'attack',       label: 'Attack',       icon: '⚔️', blurb: 'Core — plank hold.',                    kind: 'benchmark', group: 'combat', activity: 'core', unit: 's', ...GOLD },
+  strength:     { id: 'strength',     label: 'Strength',     icon: '💪', blurb: 'Arms — bench, curl, tricep.',           kind: 'aggregate', group: 'combat', ...RED },
   bench:        { id: 'bench',        label: 'Bench',        icon: '🏋️', blurb: 'Dumbbell bench press (per hand).',      kind: 'benchmark', group: 'combat', activity: 'bench', unit: 'lb', ...RED },
   curl:         { id: 'curl',         label: 'Curl',         icon: '🔁', blurb: 'Dumbbell curl (per hand).',             kind: 'benchmark', group: 'combat', activity: 'curl', unit: 'lb', ...AMBER },
   tricep:       { id: 'tricep',       label: 'Triceps',      icon: '🔨', blurb: 'Tricep extension (per hand).',          kind: 'benchmark', group: 'combat', activity: 'tricep', unit: 'lb', ...RED },
-  defence:      { id: 'defence',      label: 'Defence',      icon: '🛡️', blurb: 'Leg day — the foundation.',             kind: 'consistency', group: 'combat', activity: 'legs', ...STEEL },
+  defence:      { id: 'defence',      label: 'Defence',      icon: '🛡️', blurb: 'Legs — squat strength.',               kind: 'benchmark', group: 'combat', activity: 'legs', unit: 'lb', ...STEEL },
   ranged:       { id: 'ranged',       label: 'Ranged',       icon: '🏹', blurb: 'Calisthenics — bodyweight mastery.',    kind: 'aggregate', group: 'combat', ...GREEN },
   pullups:      { id: 'pullups',      label: 'Pull-ups',     icon: '🧗', blurb: 'Max consecutive strict pull-ups.',     kind: 'benchmark', group: 'combat', activity: 'pullups', unit: 'reps', ...GREEN },
   pushups:      { id: 'pushups',      label: 'Push-ups',     icon: '🤸', blurb: 'Max consecutive push-ups.',            kind: 'benchmark', group: 'combat', activity: 'pushups', unit: 'reps', ...GREEN },
@@ -47,7 +45,6 @@ export const SKILLS: Record<string, SkillDef> = {
 export const SKILL_ORDER = ['constitution', 'attack', 'strength', 'defence', 'ranged', 'magic', 'agility', 'prayer'];
 export const COMBAT_SKILLS = ['constitution', 'attack', 'strength', 'defence', 'ranged', 'magic'];
 export const SUBS: Record<string, string[]> = {
-  attack: ['biceps', 'chest'],
   strength: ['bench', 'curl', 'tricep'],
   ranged: ['pullups', 'pushups', 'dips'],
 };
@@ -68,13 +65,13 @@ export const PER_SESSION_XP = 80; // consistency skills (Defence / Agility / Pra
 // ── Magic: the spellbook of tricks ──
 export interface Feat { id: string; label: string; xp: number; tier: number; }
 export const FEATS: Feat[] = [
-  { id: 'plank90',   label: '90-second plank',        xp: 200,  tier: 1 },
   { id: 'crow',      label: 'Crow pose hold',         xp: 250,  tier: 1 },
   { id: 'wallhs',    label: 'Wall handstand 30s',     xp: 350,  tier: 1 },
   { id: 'lsit',      label: 'L-sit 10s',              xp: 450,  tier: 2 },
   { id: 'pistol',    label: 'Pistol squat',           xp: 550,  tier: 2 },
   { id: 'pseudo',    label: 'Pseudo-planche push-up', xp: 650,  tier: 2 },
   { id: 'fltuck',    label: 'Tuck front lever',       xp: 800,  tier: 3 },
+  { id: 'dragonflag',label: 'Dragon flag',            xp: 900,  tier: 3 },
   { id: 'muscleup',  label: 'Strict muscle-up',       xp: 1000, tier: 3 },
   { id: 'freehs',    label: 'Freestanding handstand', xp: 1200, tier: 3 },
   { id: 'hspu',      label: 'Handstand push-up',      xp: 1600, tier: 4 },
@@ -117,8 +114,8 @@ const END_ANCHORS: Anchor[]    = [[14, 1], [18, 20], [21, 50], [22, 60], [23.5, 
 const PULL_ANCHORS: Anchor[]   = [[0, 3], [1, 15], [2, 25], [3, 33], [5, 50], [8, 70], [10, 80], [12, 85], [15, 90], [20, 96], [25, 99]];
 const PUSH_ANCHORS: Anchor[]   = [[0, 3], [5, 15], [10, 30], [20, 50], [30, 68], [40, 82], [50, 90], [70, 96], [100, 99]];
 const DIP_ANCHORS: Anchor[]    = [[0, 5], [3, 20], [8, 40], [15, 60], [22, 75], [30, 88], [40, 95], [50, 99]];
-const BICEPS_ANCHORS: Anchor[] = [[11, 5], [12.5, 30], [13.5, 50], [14.5, 65], [15, 80], [16, 90], [17, 96], [18, 99]]; // inches flexed
-const CHEST_ANCHORS: Anchor[]  = [[35, 5], [38, 30], [40, 50], [42, 65], [44, 78], [46, 88], [49, 95], [52, 99]]; // inches
+const CORE_ANCHORS: Anchor[]   = [[20, 5], [30, 20], [60, 40], [90, 55], [120, 70], [180, 85], [240, 93], [300, 99]]; // plank seconds
+const SQUAT_RATIO_ANCHORS: Anchor[] = [[0.5, 5], [0.75, 20], [1.0, 35], [1.25, 50], [1.5, 65], [1.75, 78], [2.0, 88], [2.25, 95], [2.5, 99]]; // 1RM / bodyweight
 const BENCH_RATIO_ANCHORS: Anchor[] = [[0.25, 5], [0.5, 20], [0.75, 35], [1.0, 50], [1.25, 65], [1.5, 80], [1.75, 90], [2.0, 97], [2.25, 99]];
 const CURL_1RM_ANCHORS: Anchor[]    = [[8, 5], [15, 30], [25, 50], [35, 70], [45, 85], [55, 95], [65, 99]];
 const TRICEP_1RM_ANCHORS: Anchor[]  = [[5, 5], [12, 30], [20, 50], [30, 70], [40, 85], [50, 95], [60, 99]];
@@ -160,7 +157,8 @@ const moreReps = (t: number, cur: number) => { const n = Math.max(1, Math.ceil(t
 export function metricValue(id: string, e: LogEntry, bwLb: number): number {
   switch (id) {
     case 'constitution': return e.minutes || 0;
-    case 'biceps': case 'chest': return e.measure || 0;
+    case 'attack': return e.seconds || 0;
+    case 'defence': return epley(e.weight || 0, e.reps || 0) / bwLb;
     case 'pullups': case 'pushups': case 'dips': return e.reps || 0;
     case 'bench': return epley((e.weight || 0) * 2, e.reps || 0) / bwLb;
     case 'curl': case 'tricep': return epley(e.weight || 0, e.reps || 0);
@@ -172,8 +170,8 @@ export function metricValue(id: string, e: LogEntry, bwLb: number): number {
 export function benchmarkProg(id: string, e: LogEntry, bwLb: number): BProg {
   switch (id) {
     case 'constitution': { const m = e.minutes || 0; return prog(END_ANCHORS, m, t => `${(t - m).toFixed(1)} more min`, d => d * 8); }
-    case 'biceps':  { const c = e.measure || 0; return prog(BICEPS_ANCHORS, c, t => `${(t - c).toFixed(2)}" more`, d => Math.ceil(d * 12)); }
-    case 'chest':   { const c = e.measure || 0; return prog(CHEST_ANCHORS, c, t => `${(t - c).toFixed(2)}" more`, d => Math.ceil(d * 8)); }
+    case 'attack':  { const s = e.seconds || 0; return prog(CORE_ANCHORS, s, t => `${Math.ceil(t - s)}s longer`, d => Math.ceil(d / 10)); }
+    case 'defence': { const w = e.weight || 0, r = e.reps || 0; return prog(SQUAT_RATIO_ANCHORS, epley(w, r) / bwLb, t => `~${Math.ceil((t * bwLb) / (1 + r / 30))} lb @ ${r}r`, d => Math.ceil(d * bwLb / 10)); }
     case 'pullups': { const r = e.reps || 0; return prog(PULL_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d)); }
     case 'pushups': { const r = e.reps || 0; return prog(PUSH_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d / 3)); }
     case 'dips':    { const r = e.reps || 0; return prog(DIP_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d / 2)); }
@@ -187,9 +185,9 @@ export function benchmarkProg(id: string, e: LogEntry, bwLb: number): BProg {
 export function statLabel(id: string, e: LogEntry): string {
   switch (id) {
     case 'constitution': return `${e.minutes} min`;
-    case 'biceps': case 'chest': return `${e.measure}"`;
+    case 'attack': return `${e.seconds}s`;
     case 'pullups': case 'pushups': case 'dips': return `${e.reps} reps`;
-    case 'bench': case 'curl': case 'tricep': return `${e.weight}lb×${e.reps}`;
+    case 'bench': case 'curl': case 'tricep': case 'defence': return `${e.weight}lb×${e.reps}`;
     default: return '';
   }
 }

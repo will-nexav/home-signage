@@ -166,7 +166,7 @@ export default function GymApp() {
 
 function skillForActivity(activity: string): string {
   const map: Record<string, string> = {
-    cardio: 'constitution', biceps: 'biceps', chest: 'chest', bench: 'bench', curl: 'curl', tricep: 'tricep',
+    cardio: 'constitution', core: 'attack', bench: 'bench', curl: 'curl', tricep: 'tricep',
     pullups: 'pullups', pushups: 'pushups', dips: 'dips', legs: 'defence', mobility: 'agility', meditate: 'prayer',
   };
   return map[activity] || 'constitution';
