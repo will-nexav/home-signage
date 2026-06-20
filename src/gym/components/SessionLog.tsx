@@ -1,55 +1,46 @@
-import type { GymSession } from '../types';
-import { skillDef, INTENSITY_LABEL, CONSTITUTION } from '../skills';
+import type { LogEntry } from '../types';
+import { skillDef } from '../skills';
 
-interface Props {
-  sessions: GymSession[];
-}
+interface Props { log: LogEntry[]; }
+
+const ACT_SKILL: Record<string, string> = { cardio: 'endurance', bench: 'bench', curl: 'curl', pullups: 'pullups', stretch: 'mobility' };
 
 function relDay(date: string): string {
-  const today = new Date();
   const d = new Date(date + 'T00:00:00');
-  const diff = Math.round((new Date(today.toDateString()).getTime() - d.getTime()) / 86400000);
+  const diff = Math.round((new Date(new Date().toDateString()).getTime() - d.getTime()) / 86400000);
   if (diff <= 0) return 'Today';
   if (diff === 1) return 'Yesterday';
   if (diff < 7) return `${diff}d ago`;
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
 
-export default function SessionLog({ sessions }: Props) {
-  if (sessions.length === 0) {
-    return (
-      <p style={{ color: 'var(--ink-faint)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>
-        No sessions banked yet. Hit the gym and log your first one. ⚔️
-      </p>
-    );
+function summary(e: LogEntry): string {
+  switch (e.activity) {
+    case 'cardio': return e.minutes != null ? `Treadmill test — ${e.minutes} min` : 'Cardio session';
+    case 'bench': return `Bench ${e.weight}lb × ${e.reps}`;
+    case 'curl': return `Curl ${e.weight}lb × ${e.reps}`;
+    case 'pullups': return `Pull-ups × ${e.reps}`;
+    case 'stretch': return 'Stretch / mobility';
   }
+}
 
-  const recent = [...sessions].sort((a, b) => b.ts - a.ts).slice(0, 12);
-
+export default function SessionLog({ log }: Props) {
+  if (log.length === 0) {
+    return <p style={{ color: 'var(--ink-faint)', fontSize: 13, textAlign: 'center', padding: '20px 0' }}>No sessions logged yet. ⚔️</p>;
+  }
+  const recent = [...log].sort((a, b) => b.ts - a.ts).slice(0, 15);
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-      {recent.map(s => {
-        const total = Object.values(s.xp).reduce((a, b) => a + b, 0);
-        const trained = s.skills.filter(id => id !== CONSTITUTION);
-        return (
-          <div key={s.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 8px', borderRadius: 9, borderBottom: '1px solid rgba(201,168,107,0.07)' }}>
-            <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>❤️</span>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                <span style={{ fontFamily: 'var(--serif)', fontSize: 13, color: 'var(--ink)' }}>
-                  {trained.length ? trained.map(id => skillDef(id).icon).join(' ') : 'Showed up'}
-                </span>
-                <span className="pill">{INTENSITY_LABEL[s.intensity]}</span>
-              </div>
-              {s.note && <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 2 }}>{s.note}</div>}
-            </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}>
-              <div className="mono" style={{ fontSize: 12, color: '#ffe48a', fontWeight: 700 }}>+{total}</div>
-              <div className="mono" style={{ fontSize: 9.5, color: 'var(--ink-faint)' }}>{relDay(s.date)}</div>
-            </div>
+    <div style={{ display: 'flex', flexDirection: 'column' }}>
+      {recent.map(e => (
+        <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 11, padding: '10px 6px', borderBottom: '1px solid rgba(201,168,107,0.07)' }}>
+          <span style={{ fontSize: 16, width: 22, textAlign: 'center' }}>{skillDef(ACT_SKILL[e.activity]).icon}</span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontFamily: 'var(--serif)', fontSize: 13, color: 'var(--ink)' }}>{summary(e)}</div>
+            {e.note && <div style={{ fontSize: 11.5, color: 'var(--ink-faint)', fontStyle: 'italic', marginTop: 1 }}>{e.note}</div>}
           </div>
-        );
-      })}
+          <div className="mono" style={{ fontSize: 9.5, color: 'var(--ink-faint)', flexShrink: 0 }}>{relDay(e.date)}</div>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,33 +1,50 @@
-import type { GymSession } from '../types';
-import { skillDef, skillLevel, MAX_LEVEL, INTENSITY_LABEL } from '../skills';
-import { cumulative } from '../storage';
+import type { GymState, Levels, Activity } from '../types';
+import { skillDef, STRENGTH_SUBS, CONS_XP, STRETCH_MOB_XP } from '../skills';
+import { skillView, benchmarkSeries, cumulative } from '../storage';
 import PBar from '../../components/PBar';
 import Chart from './Chart';
+import SkillBar from './SkillBar';
 
 interface Props {
-  skillId: string;
-  xp: number;
-  sessions: GymSession[];
+  state: GymState;
+  id: string;
+  levels: Levels;
   onBack: () => void;
+  onOpen: (id: string) => void;
+  onLog: (activity: Activity) => void;
 }
 
-export default function SkillDetail({ skillId, xp, sessions, onBack }: Props) {
-  const def = skillDef(skillId);
-  const lv = skillLevel(xp);
+const ID_ACTIVITY: Record<string, Activity> = { endurance: 'cardio', bench: 'bench', curl: 'curl', pullups: 'pullups', mobility: 'stretch' };
+const CHART_UNIT: Record<string, string> = { endurance: 'minutes', bench: 'est. 1RM total (lb)', curl: 'est. 1RM/hand (lb)', pullups: 'reps' };
 
-  // sessions that fed this skill, chronological
-  const fed = sessions
-    .filter(s => (s.xp[skillId] || 0) > 0)
-    .sort((a, b) => a.ts - b.ts);
+export default function SkillDetail({ state, id, levels, onBack, onOpen, onLog }: Props) {
+  const def = skillDef(id);
+  const v = skillView(state, id, levels);
+  const activity = ID_ACTIVITY[id];
 
-  // cumulative xp curve
-  const curve = cumulative(fed.map(s => s.xp[skillId] || 0));
+  // chart series
+  let series: number[] = [];
+  let chartLabel = '';
+  if (id === 'constitution') {
+    series = cumulative([...state.log].sort((a, b) => a.ts - b.ts).map(e => CONS_XP[e.activity] || 0));
+    chartLabel = 'Constitution XP over time';
+  } else if (id === 'mobility') {
+    series = cumulative([...state.log].filter(e => e.activity === 'stretch').sort((a, b) => a.ts - b.ts).map(() => STRETCH_MOB_XP));
+    chartLabel = 'Mobility XP over time';
+  } else if (id !== 'strength') {
+    series = benchmarkSeries(state.log, activity);
+    chartLabel = CHART_UNIT[id];
+  }
+
+  const entries = id === 'strength' ? [] :
+    [...state.log]
+      .filter(e => id === 'constitution' ? true : e.activity === activity)
+      .sort((a, b) => b.ts - a.ts).slice(0, 15);
 
   return (
     <div style={{ maxWidth: 560, margin: '0 auto', padding: '24px 18px 60px' }}>
       <button className="back-link" onClick={onBack}>← Back to skills</button>
 
-      {/* header */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: 16, marginBottom: 20, padding: 18,
         border: '1px solid rgba(201,168,107,0.2)', borderRadius: 16,
@@ -36,67 +53,68 @@ export default function SkillDetail({ skillId, xp, sessions, onBack }: Props) {
         <div style={{
           width: 64, height: 64, borderRadius: 16, fontSize: 32, flexShrink: 0,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          border: '1px solid rgba(236,212,155,0.35)', background: 'rgba(0,0,0,0.35)',
-          boxShadow: `0 0 26px -6px ${def.glow}`,
+          border: '1px solid rgba(236,212,155,0.35)', background: 'rgba(0,0,0,0.35)', boxShadow: `0 0 26px -6px ${def.glow}`,
         }}>{def.icon}</div>
         <div style={{ flex: 1 }}>
-          <h2 style={{ fontFamily: 'var(--serif)', fontSize: 24, fontWeight: 900, color: 'var(--gold-bright)', margin: 0, letterSpacing: '0.04em' }}>
-            {def.label}
-          </h2>
+          <h2 style={{ fontFamily: 'var(--serif)', fontSize: 24, fontWeight: 900, color: 'var(--gold-bright)', margin: 0 }}>{def.label}</h2>
           <p style={{ fontSize: 12.5, color: 'var(--ink-faint)', margin: '2px 0 0' }}>{def.blurb}</p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div className="mono" style={{ fontSize: 30, fontWeight: 700, color: 'var(--gold-bright)', lineHeight: 1 }}>{lv.level}</div>
-          <p className="eyebrow" style={{ marginTop: 3 }}>/ {MAX_LEVEL}</p>
+          <div className="mono" style={{ fontSize: 30, fontWeight: 700, color: 'var(--gold-bright)', lineHeight: 1 }}>{v.level}</div>
+          <p className="eyebrow" style={{ marginTop: 3 }}>{v.caption || '/ 99'}</p>
         </div>
       </div>
 
-      {/* progress to next */}
-      <div style={{ marginBottom: 22 }}>
-        <PBar pct={lv.pct} bar={def.bar} height={10} />
+      <div style={{ marginBottom: 20 }}>
+        <PBar pct={v.pct} bar={def.bar} height={10} />
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 7 }}>
-          <span className="mono" style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{Math.round(xp).toLocaleString()} xp total</span>
+          <span className="mono" style={{ fontSize: 12, color: 'var(--ink-soft)' }}>{v.stat}</span>
           <span className="mono" style={{ fontSize: 12, color: '#a5e093' }}>
-            {lv.maxed ? 'MAXED — skill cape earned 🏆' : `${lv.toNext.toLocaleString()} xp to level ${lv.level + 1}`}
+            {v.need === 'MAXED' ? 'MAXED — cape earned 🏆' : `next: ${v.need}`}
           </span>
         </div>
       </div>
 
-      {/* stats row */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginBottom: 22 }}>
-        <Stat label="Sessions" value={String(fed.length)} />
-        <Stat label="Avg / session" value={fed.length ? String(Math.round(xp / fed.length)) : '0'} />
-        <Stat label="% to next" value={`${lv.pct}%`} />
-      </div>
-
-      <Chart points={curve} color={def.bar.includes('#f5765a') ? '#f5765a' : def.bar.includes('#82c97a') ? '#82c97a' : def.bar.includes('#7c9ef5') ? '#7c9ef5' : '#ecd49b'} label="XP over time" height={130} />
-
-      {/* feeding sessions */}
-      <p className="eyebrow" style={{ margin: '24px 0 8px' }}>Sessions that trained {def.label}</p>
-      {fed.length === 0 ? (
-        <p style={{ color: 'var(--ink-faint)', fontSize: 13 }}>None yet.</p>
+      {id === 'strength' ? (
+        <>
+          <p className="eyebrow" style={{ marginBottom: 9 }}>Sub-skills (your Strength is their average)</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {STRENGTH_SUBS.map(s => (
+              <SkillBar key={s} view={skillView(state, s, levels)} onClick={() => onOpen(s)} />
+            ))}
+          </div>
+        </>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column' }}>
-          {[...fed].reverse().slice(0, 15).map(s => (
-            <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '9px 6px', borderBottom: '1px solid rgba(201,168,107,0.07)' }}>
-              <span style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
-                {s.date} · <span className="pill">{INTENSITY_LABEL[s.intensity]}</span>
-                {s.note && <span style={{ fontStyle: 'italic', color: 'var(--ink-faint)' }}> — {s.note}</span>}
-              </span>
-              <span className="mono" style={{ fontSize: 12, color: '#ffe48a', fontWeight: 700 }}>+{s.xp[skillId]}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
+        <>
+          {activity && (
+            <button className="levelup-btn" style={{ width: '100%', marginBottom: 18 }} onClick={() => onLog(activity)}>
+              + Log {def.label}
+            </button>
+          )}
+          <Chart points={series} color={def.color} label={chartLabel} height={130} />
 
-function Stat({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ border: '1px solid rgba(201,168,107,0.14)', borderRadius: 11, padding: '12px 8px', textAlign: 'center', background: 'rgba(0,0,0,0.2)' }}>
-      <div className="mono" style={{ fontSize: 18, fontWeight: 700, color: 'var(--gold-bright)', lineHeight: 1 }}>{value}</div>
-      <p className="eyebrow" style={{ fontSize: 8, marginTop: 5 }}>{label}</p>
+          <p className="eyebrow" style={{ margin: '24px 0 8px' }}>History</p>
+          {entries.length === 0 ? (
+            <p style={{ color: 'var(--ink-faint)', fontSize: 13 }}>Nothing logged yet.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {entries.map(e => (
+                <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 6px', borderBottom: '1px solid rgba(201,168,107,0.07)' }}>
+                  <span style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>
+                    {e.date}{e.note ? ` · ${e.note}` : ''}
+                  </span>
+                  <span className="mono" style={{ fontSize: 12, color: 'var(--gold-bright)', fontWeight: 700 }}>
+                    {e.activity === 'cardio' ? (e.minutes != null ? `${e.minutes} min` : 'session')
+                      : e.activity === 'pullups' ? `${e.reps} reps`
+                      : e.activity === 'stretch' ? 'stretch'
+                      : `${e.weight}×${e.reps}`}
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }

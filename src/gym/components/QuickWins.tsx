@@ -1,31 +1,21 @@
-import { SKILLS, skillLevel, skillDef, INTENSITY_XP, SHOWUP_XP, CONSTITUTION } from '../skills';
+import type { GymState, Levels } from '../types';
+import { skillView } from '../storage';
+import { skillDef } from '../skills';
 
 interface Props {
-  skillXp: Record<string, number>;
+  state: GymState;
+  levels: Levels;
   onTrain: () => void;
 }
 
-interface Win {
-  id: string;
-  nextLevel: number;
-  toNext: number;
-  sessions: number;
-  pct: number;
-}
+// Rank the trackable skills by how little effort the next level takes.
+const RANKABLE = ['pullups', 'bench', 'curl', 'endurance', 'constitution', 'mobility'];
 
-// Fastest XP/session for a skill: showing up for Constitution, a Beast set otherwise.
-function fastRate(id: string): number {
-  return id === CONSTITUTION ? SHOWUP_XP : INTENSITY_XP.beast;
-}
-
-export default function QuickWins({ skillXp, onTrain }: Props) {
-  const wins: Win[] = SKILLS
-    .map(s => {
-      const lv = skillLevel(skillXp[s.id] || 0);
-      return { id: s.id, nextLevel: lv.level + 1, toNext: lv.toNext, sessions: Math.max(1, Math.ceil(lv.toNext / fastRate(s.id))), pct: lv.pct, maxed: lv.maxed };
-    })
-    .filter(w => !w.maxed)
-    .sort((a, b) => a.sessions - b.sessions || a.toNext - b.toNext)
+export default function QuickWins({ state, levels, onTrain }: Props) {
+  const wins = RANKABLE
+    .map(id => skillView(state, id, levels))
+    .filter(v => !v.untested && isFinite(v.effort))
+    .sort((a, b) => a.effort - b.effort)
     .slice(0, 3);
 
   if (wins.length === 0) return null;
@@ -46,13 +36,11 @@ export default function QuickWins({ skillXp, onTrain }: Props) {
             <div key={w.id} style={{ display: 'flex', alignItems: 'center', gap: 11 }}>
               <span style={{ fontSize: 18, width: 24, textAlign: 'center' }}>{def.icon}</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4, gap: 8 }}>
                   <span style={{ fontFamily: 'var(--serif)', fontSize: 13, color: 'var(--ink)' }}>
                     {def.label} → <span style={{ color: 'var(--gold-bright)', fontWeight: 700 }}>Lv {w.nextLevel}</span>
                   </span>
-                  <span className="mono" style={{ fontSize: 11, color: '#a5e093' }}>
-                    ~{w.sessions} session{w.sessions === 1 ? '' : 's'}
-                  </span>
+                  <span className="mono" style={{ fontSize: 11, color: '#a5e093', whiteSpace: 'nowrap' }}>{w.need}</span>
                 </div>
                 <div style={{ height: 5, background: 'rgba(0,0,0,0.35)', borderRadius: 5, overflow: 'hidden' }}>
                   <div style={{ height: '100%', width: `${w.pct}%`, background: def.bar, borderRadius: 5 }} />
@@ -63,7 +51,7 @@ export default function QuickWins({ skillXp, onTrain }: Props) {
         })}
       </div>
       <button onClick={onTrain} className="ghost-btn" style={{ width: '100%', marginTop: 14, padding: '9px' }}>
-        Bank a session →
+        Log a session →
       </button>
     </div>
   );
