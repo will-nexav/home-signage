@@ -28,12 +28,13 @@ const AMBER = { bar: 'linear-gradient(90deg,#c2682f,#f0a35a)', color: '#f0a35a',
 export const SKILLS: Record<string, SkillDef> = {
   constitution: { id: 'constitution', label: 'Constitution', icon: '❤️', blurb: "Cardio engine — Mitch's treadmill test.", kind: 'benchmark', group: 'combat', activity: 'cardio', unit: 'min', ...RED },
   attack:       { id: 'attack',       label: 'Attack',       icon: '⚔️', blurb: 'Aesthetics — biceps & chest size.',     kind: 'aggregate', group: 'combat', ...GOLD },
-  biceps:       { id: 'biceps',       label: 'Biceps',       icon: '🦾', blurb: 'Flexed arm circumference.',             kind: 'benchmark', group: 'combat', activity: 'biceps', unit: 'cm', ...GOLD },
-  chest:        { id: 'chest',        label: 'Chest',        icon: '🫁', blurb: 'Chest circumference.',                  kind: 'benchmark', group: 'combat', activity: 'chest', unit: 'cm', ...GOLD },
-  strength:     { id: 'strength',     label: 'Strength',     icon: '💪', blurb: 'Weighted lifts — bench & curl.',        kind: 'aggregate', group: 'combat', ...RED },
+  biceps:       { id: 'biceps',       label: 'Biceps',       icon: '🦾', blurb: 'Flexed arm circumference.',             kind: 'benchmark', group: 'combat', activity: 'biceps', unit: 'in', ...GOLD },
+  chest:        { id: 'chest',        label: 'Chest',        icon: '🫁', blurb: 'Chest circumference.',                  kind: 'benchmark', group: 'combat', activity: 'chest', unit: 'in', ...GOLD },
+  strength:     { id: 'strength',     label: 'Strength',     icon: '💪', blurb: 'Weighted lifts — bench, curl, tricep.', kind: 'aggregate', group: 'combat', ...RED },
   bench:        { id: 'bench',        label: 'Bench',        icon: '🏋️', blurb: 'Dumbbell bench press (per hand).',      kind: 'benchmark', group: 'combat', activity: 'bench', unit: 'lb', ...RED },
   curl:         { id: 'curl',         label: 'Curl',         icon: '🔁', blurb: 'Dumbbell curl (per hand).',             kind: 'benchmark', group: 'combat', activity: 'curl', unit: 'lb', ...AMBER },
-  defence:      { id: 'defence',      label: 'Defence',      icon: '🛡️', blurb: 'Durability — back & hand rehab.',       kind: 'consistency', group: 'combat', activity: 'rehab', ...STEEL },
+  tricep:       { id: 'tricep',       label: 'Triceps',      icon: '🔨', blurb: 'Tricep extension (per hand).',          kind: 'benchmark', group: 'combat', activity: 'tricep', unit: 'lb', ...RED },
+  defence:      { id: 'defence',      label: 'Defence',      icon: '🛡️', blurb: 'Leg day — the foundation.',             kind: 'consistency', group: 'combat', activity: 'legs', ...STEEL },
   ranged:       { id: 'ranged',       label: 'Ranged',       icon: '🏹', blurb: 'Calisthenics — bodyweight mastery.',    kind: 'aggregate', group: 'combat', ...GREEN },
   pullups:      { id: 'pullups',      label: 'Pull-ups',     icon: '🧗', blurb: 'Max consecutive strict pull-ups.',     kind: 'benchmark', group: 'combat', activity: 'pullups', unit: 'reps', ...GREEN },
   pushups:      { id: 'pushups',      label: 'Push-ups',     icon: '🤸', blurb: 'Max consecutive push-ups.',            kind: 'benchmark', group: 'combat', activity: 'pushups', unit: 'reps', ...GREEN },
@@ -47,7 +48,7 @@ export const SKILL_ORDER = ['constitution', 'attack', 'strength', 'defence', 'ra
 export const COMBAT_SKILLS = ['constitution', 'attack', 'strength', 'defence', 'ranged', 'magic'];
 export const SUBS: Record<string, string[]> = {
   attack: ['biceps', 'chest'],
-  strength: ['bench', 'curl'],
+  strength: ['bench', 'curl', 'tricep'],
   ranged: ['pullups', 'pushups', 'dips'],
 };
 export const ALL_IDS = [...SKILL_ORDER, ...Object.values(SUBS).flat()];
@@ -116,10 +117,11 @@ const END_ANCHORS: Anchor[]    = [[14, 1], [18, 20], [21, 50], [22, 60], [23.5, 
 const PULL_ANCHORS: Anchor[]   = [[0, 3], [1, 15], [2, 25], [3, 33], [5, 50], [8, 70], [10, 80], [12, 85], [15, 90], [20, 96], [25, 99]];
 const PUSH_ANCHORS: Anchor[]   = [[0, 3], [5, 15], [10, 30], [20, 50], [30, 68], [40, 82], [50, 90], [70, 96], [100, 99]];
 const DIP_ANCHORS: Anchor[]    = [[0, 5], [3, 20], [8, 40], [15, 60], [22, 75], [30, 88], [40, 95], [50, 99]];
-const BICEPS_ANCHORS: Anchor[] = [[28, 5], [31, 30], [33, 50], [35.5, 65], [38, 80], [40.5, 90], [43, 96], [45.7, 99]]; // cm flexed
-const CHEST_ANCHORS: Anchor[]  = [[88, 5], [95, 30], [100, 50], [107, 65], [112, 78], [118, 88], [124, 95], [130, 99]]; // cm
+const BICEPS_ANCHORS: Anchor[] = [[11, 5], [12.5, 30], [13.5, 50], [14.5, 65], [15, 80], [16, 90], [17, 96], [18, 99]]; // inches flexed
+const CHEST_ANCHORS: Anchor[]  = [[35, 5], [38, 30], [40, 50], [42, 65], [44, 78], [46, 88], [49, 95], [52, 99]]; // inches
 const BENCH_RATIO_ANCHORS: Anchor[] = [[0.25, 5], [0.5, 20], [0.75, 35], [1.0, 50], [1.25, 65], [1.5, 80], [1.75, 90], [2.0, 97], [2.25, 99]];
 const CURL_1RM_ANCHORS: Anchor[]    = [[8, 5], [15, 30], [25, 50], [35, 70], [45, 85], [55, 95], [65, 99]];
+const TRICEP_1RM_ANCHORS: Anchor[]  = [[5, 5], [12, 30], [20, 50], [30, 70], [40, 85], [50, 95], [60, 99]];
 
 function interp(a: Anchor[], v: number): number {
   if (v <= a[0][0]) return a[0][1];
@@ -161,7 +163,7 @@ export function metricValue(id: string, e: LogEntry, bwLb: number): number {
     case 'biceps': case 'chest': return e.measure || 0;
     case 'pullups': case 'pushups': case 'dips': return e.reps || 0;
     case 'bench': return epley((e.weight || 0) * 2, e.reps || 0) / bwLb;
-    case 'curl': return epley(e.weight || 0, e.reps || 0);
+    case 'curl': case 'tricep': return epley(e.weight || 0, e.reps || 0);
     default: return 0;
   }
 }
@@ -170,13 +172,14 @@ export function metricValue(id: string, e: LogEntry, bwLb: number): number {
 export function benchmarkProg(id: string, e: LogEntry, bwLb: number): BProg {
   switch (id) {
     case 'constitution': { const m = e.minutes || 0; return prog(END_ANCHORS, m, t => `${(t - m).toFixed(1)} more min`, d => d * 8); }
-    case 'biceps':  { const c = e.measure || 0; return prog(BICEPS_ANCHORS, c, t => `${(t - c).toFixed(1)} more cm`, d => Math.ceil(d * 4)); }
-    case 'chest':   { const c = e.measure || 0; return prog(CHEST_ANCHORS, c, t => `${(t - c).toFixed(1)} more cm`, d => Math.ceil(d * 2)); }
+    case 'biceps':  { const c = e.measure || 0; return prog(BICEPS_ANCHORS, c, t => `${(t - c).toFixed(2)}" more`, d => Math.ceil(d * 12)); }
+    case 'chest':   { const c = e.measure || 0; return prog(CHEST_ANCHORS, c, t => `${(t - c).toFixed(2)}" more`, d => Math.ceil(d * 8)); }
     case 'pullups': { const r = e.reps || 0; return prog(PULL_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d)); }
     case 'pushups': { const r = e.reps || 0; return prog(PUSH_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d / 3)); }
     case 'dips':    { const r = e.reps || 0; return prog(DIP_ANCHORS, r, t => moreReps(t, r), d => Math.ceil(d / 2)); }
     case 'bench':   { const w = e.weight || 0, r = e.reps || 0; return prog(BENCH_RATIO_ANCHORS, epley(w * 2, r) / bwLb, t => `~${Math.ceil((t * bwLb) / 2 / (1 + r / 30))} lb/hand @ ${r}r`, d => Math.ceil(d * bwLb / 5)); }
     case 'curl':    { const w = e.weight || 0, r = e.reps || 0; return prog(CURL_1RM_ANCHORS, epley(w, r), t => `~${Math.ceil(t / (1 + r / 30))} lb/hand @ ${r}r`, d => Math.ceil(d / 5)); }
+    case 'tricep':  { const w = e.weight || 0, r = e.reps || 0; return prog(TRICEP_1RM_ANCHORS, epley(w, r), t => `~${Math.ceil(t / (1 + r / 30))} lb/hand @ ${r}r`, d => Math.ceil(d / 5)); }
     default: return { level: 1, pct: 0, nextLevel: 2, need: '', effort: Infinity, maxed: false };
   }
 }
@@ -184,9 +187,9 @@ export function benchmarkProg(id: string, e: LogEntry, bwLb: number): BProg {
 export function statLabel(id: string, e: LogEntry): string {
   switch (id) {
     case 'constitution': return `${e.minutes} min`;
-    case 'biceps': case 'chest': return `${e.measure} cm`;
+    case 'biceps': case 'chest': return `${e.measure}"`;
     case 'pullups': case 'pushups': case 'dips': return `${e.reps} reps`;
-    case 'bench': case 'curl': return `${e.weight}lb×${e.reps}`;
+    case 'bench': case 'curl': case 'tricep': return `${e.weight}lb×${e.reps}`;
     default: return '';
   }
 }

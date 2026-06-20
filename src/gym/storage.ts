@@ -53,7 +53,7 @@ function hasMetric(id: string, e: LogEntry): boolean {
     case 'constitution': return e.minutes != null;
     case 'biceps': case 'chest': return e.measure != null;
     case 'pullups': case 'pushups': case 'dips': return e.reps != null;
-    case 'bench': case 'curl': return e.weight != null && e.reps != null;
+    case 'bench': case 'curl': case 'tricep': return e.weight != null && e.reps != null;
     default: return false;
   }
 }
@@ -190,7 +190,7 @@ export function benchmarkSeries(state: GymState, id: string): number[] {
       case 'biceps': case 'chest': return e.measure || 0;
       case 'pullups': case 'pushups': case 'dips': return e.reps || 0;
       case 'bench': return Math.round(epley((e.weight || 0) * 2, e.reps || 0));
-      case 'curl': return Math.round(epley(e.weight || 0, e.reps || 0));
+      case 'curl': case 'tricep': return Math.round(epley(e.weight || 0, e.reps || 0));
       default: return 0;
     }
   });

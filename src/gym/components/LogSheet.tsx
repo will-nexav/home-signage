@@ -13,20 +13,20 @@ interface Props {
 const LOG_SKILLS: { id: string; acts: Activity[] }[] = [
   { id: 'constitution', acts: ['cardio'] },
   { id: 'attack', acts: ['biceps', 'chest'] },
-  { id: 'strength', acts: ['bench', 'curl'] },
+  { id: 'strength', acts: ['bench', 'curl', 'tricep'] },
   { id: 'ranged', acts: ['pullups', 'pushups', 'dips'] },
-  { id: 'defence', acts: ['rehab'] },
+  { id: 'defence', acts: ['legs'] },
   { id: 'agility', acts: ['mobility'] },
   { id: 'prayer', acts: ['meditate'] },
 ];
 const ACT_SKILL: Record<Activity, string> = {
-  cardio: 'constitution', biceps: 'biceps', chest: 'chest', bench: 'bench', curl: 'curl',
-  pullups: 'pullups', pushups: 'pushups', dips: 'dips', rehab: 'defence', mobility: 'agility', meditate: 'prayer',
+  cardio: 'constitution', biceps: 'biceps', chest: 'chest', bench: 'bench', curl: 'curl', tricep: 'tricep',
+  pullups: 'pullups', pushups: 'pushups', dips: 'dips', legs: 'defence', mobility: 'agility', meditate: 'prayer',
 };
 type InputKind = 'minutes' | 'measure' | 'wr' | 'reps' | 'none';
 const INPUT: Record<Activity, InputKind> = {
   cardio: 'minutes', meditate: 'minutes', biceps: 'measure', chest: 'measure',
-  bench: 'wr', curl: 'wr', pullups: 'reps', pushups: 'reps', dips: 'reps', rehab: 'none', mobility: 'none',
+  bench: 'wr', curl: 'wr', tricep: 'wr', pullups: 'reps', pushups: 'reps', dips: 'reps', legs: 'none', mobility: 'none',
 };
 
 export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
@@ -95,7 +95,7 @@ export default function LogSheet({ onConfirm, onCancel, initialSkill }: Props) {
             <NumInput value={minutes} onChange={setMinutes} placeholder="e.g. 18.5" />
           </Field>
         )}
-        {kind === 'measure' && <Field label="Circumference (cm)"><NumInput value={measure} onChange={setMeasure} placeholder="e.g. 36" /></Field>}
+        {kind === 'measure' && <Field label="Circumference (inches)"><NumInput value={measure} onChange={setMeasure} placeholder={activity === 'biceps' ? '14.5' : '41'} /></Field>}
         {kind === 'reps' && <Field label="Max consecutive reps"><NumInput value={reps} onChange={setReps} placeholder="e.g. 8" /></Field>}
         {kind === 'wr' && (
           <div style={{ display: 'flex', gap: 10 }}>

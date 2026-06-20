@@ -117,7 +117,7 @@ export default function SkillDetail({ state, id, onBack, onOpen, onLog, onToggle
                 <div key={e.id} style={{ display: 'flex', justifyContent: 'space-between', padding: '9px 6px', borderBottom: '1px solid rgba(201,168,107,0.07)' }}>
                   <span style={{ fontSize: 12.5, color: 'var(--ink-soft)' }}>{e.date}{e.note ? ` · ${e.note}` : ''}</span>
                   <span className="mono" style={{ fontSize: 12, color: 'var(--gold-bright)', fontWeight: 700 }}>
-                    {e.minutes != null ? `${e.minutes} min` : e.measure != null ? `${e.measure} cm` : e.weight != null ? `${e.weight}×${e.reps}` : e.reps != null ? `${e.reps} reps` : 'session'}
+                    {e.minutes != null ? `${e.minutes} min` : e.measure != null ? `${e.measure}"` : e.weight != null ? `${e.weight}×${e.reps}` : e.reps != null ? `${e.reps} reps` : 'session'}
                   </span>
                 </div>
               ))}

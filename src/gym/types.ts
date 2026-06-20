@@ -1,6 +1,6 @@
 export type Activity =
-  | 'cardio' | 'bench' | 'curl' | 'pullups' | 'pushups' | 'dips'
-  | 'biceps' | 'chest' | 'rehab' | 'mobility' | 'meditate';
+  | 'cardio' | 'bench' | 'curl' | 'tricep' | 'pullups' | 'pushups' | 'dips'
+  | 'biceps' | 'chest' | 'legs' | 'mobility' | 'meditate';
 
 export interface LogEntry {
   id: string;
