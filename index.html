@@ -122,12 +122,12 @@
   <section class="panel" id="quest">
     <div>
       <div class="label">THIS WEEK'S QUEST</div>
-      <div class="quest-title" id="questTitle">Train 4 days</div>
+      <div class="quest-title" id="questTitle">Train 3 days</div>
     </div>
     <div class="days" id="days"></div>
     <div class="count">
       <span class="big" id="done">0</span>
-      <span class="of" id="of">/ 4 days</span>
+      <span class="of" id="of">/ 3 days</span>
       <span class="msg" id="msg"></span>
     </div>
   </section>
@@ -168,7 +168,7 @@
    ========================================================= */
 const params = new URLSearchParams(location.search);
 const SHEET_CSV_URL = params.get('sheet') || '';
-const WEEKLY_GOAL = Math.max(1, Math.min(7, parseInt(params.get('goal') || '4', 10)));
+const WEEKLY_GOAL = Math.max(1, Math.min(7, parseInt(params.get('goal') || '3', 10)));
 const TZ = 'America/New_York';
 const XP_PER_WORKOUT = 100;
 const XP_PER_WEEK_GOAL = 150;   // bonus for completing the weekly quest
