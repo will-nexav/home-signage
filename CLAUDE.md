@@ -19,5 +19,5 @@ Check the page at TV size, then tell Will the URL to load in OptiSign.
 
 ## How it works now
 - `index.html` is the whole fitness screen, a single file with no build step.
-- Data comes from a Google Sheet that's published as a CSV. Columns: Date, Workout, Diet (Y/N). The sheet link goes in the page address (`?sheet=...&goal=3`), never in the code.
+- Data comes from a Google Sheet that's published as a CSV. Columns are found by header name: Date, Workout (Yes / No / "TBD - Soccer" for a planned workout), Notes, Diet (Yes/No). The sheet link goes in the page address (`?sheet=...&goal=3`), never in the code.
 - Game look: an original medieval RPG style with skills, levels and XP. Don't copy any real game's art, names or UI.
