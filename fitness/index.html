@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitness Journey</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0d0a;
+    --stone: #231e17;
+    --stone-hi: #2f281e;
+    --edge: #5a4a32;
+    --gold: #f2c14e;
+    --text: #f4ead6;
+    --muted: #b3a58a;
+    --green: #7bd389;
+    --red: #e0675a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
+  body { color: var(--text); font-family: Inter, system-ui, sans-serif; }
+  h1, h2, .serif, .label { font-family: Cinzel, Georgia, serif; }
+
+  /* Fixed 1920x1080 stage, scaled to fit any screen */
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1080px;
+    padding: 44px 72px;
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    grid-template-rows: auto 330px 1fr auto;
+    gap: 26px 40px;
+    background: radial-gradient(ellipse at 30% 0%, #2a2216 0%, transparent 60%), var(--bg);
+  }
+  .panel {
+    background: linear-gradient(180deg, var(--stone-hi), var(--stone));
+    border: 4px solid var(--edge);
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 2px #00000055, 0 10px 30px #00000088;
+    padding: 26px 40px;
+    position: relative;
+  }
+  .label { font-size: 34px; color: var(--gold); letter-spacing: 2px; }
+
+  /* Header */
+  header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; }
+  header h1 { font-size: 70px; color: var(--gold); letter-spacing: 4px; text-shadow: 0 4px 0 #00000099; }
+  header .date { font-size: 42px; color: var(--muted); font-weight: 700; }
+  #ribbon {
+    display: none; margin-left: 28px; vertical-align: middle; border-radius: 10px;
+    background: var(--red); color: #fff; font-family: Inter, sans-serif; font-size: 28px; font-weight: 800; padding: 6px 18px; letter-spacing: 3px;
+  }
+
+  /* Journey map */
+  #journey { grid-column: 1 / -1; display: flex; flex-direction: column; }
+  #journey .top { display: flex; justify-content: space-between; align-items: baseline; }
+  #nextLand { font-size: 34px; font-weight: 700; }
+  #nextLand b { color: var(--gold); }
+  #map { flex: 1; width: 100%; margin-top: 4px; overflow: visible; }
+  #map .land-name { font-family: Inter, sans-serif; font-size: 27px; font-weight: 800; fill: var(--muted); text-anchor: middle; }
+  #map .land-name.reached { fill: var(--text); }
+  @keyframes pulse { 0%,100% { r: 34; opacity: .55; } 50% { r: 50; opacity: 0; } }
+  #map .halo { animation: pulse 2.2s ease-in-out infinite; }
+
+  /* Weekly quest */
+  #quest { display: flex; flex-direction: column; justify-content: space-between; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 20px; }
+  .day { text-align: center; }
+  .shield {
+    height: 112px; border-radius: 14px 14px 50px 50px;
+    border: 5px solid var(--edge); background: #17130e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 64px; font-weight: 800; color: transparent;
+  }
+  .day.done .shield { background: linear-gradient(180deg, #f7d77a, var(--gold) 55%, #b98a22); border-color: #fff1c2; color: #3b2a08; }
+  .day.today .shield { outline: 5px solid var(--text); outline-offset: 5px; }
+  .day.future .shield { opacity: .45; }
+  .day.planned .shield { opacity: 1; border: 5px dashed var(--gold); }
+  .shield .plan { color: var(--gold); font-size: 22px; font-weight: 800; line-height: 1.1; padding: 0 4px; overflow-wrap: normal; }
+  .day .dn { font-size: 30px; font-weight: 700; color: var(--muted); margin-top: 12px; }
+  .day.today .dn { color: var(--text); }
+  .count { display: flex; align-items: baseline; gap: 20px; }
+  .count .big { font-size: 120px; font-weight: 800; line-height: .9; color: var(--gold); }
+  .count .of { font-size: 52px; font-weight: 700; color: var(--muted); }
+  .count .msg { font-size: 42px; font-weight: 700; margin-left: auto; text-align: right; }
+  .complete { color: var(--green); }
+
+  /* Skills */
+  #skills { display: grid; grid-template-rows: 1fr 1fr; gap: 26px; }
+  .skill { display: grid; grid-template-columns: auto 1fr; gap: 32px; align-items: center; padding: 18px 36px; }
+  .crest {
+    width: 140px; height: 154px;
+    clip-path: polygon(50% 0, 100% 12%, 100% 60%, 50% 100%, 0 60%, 0 12%);
+    background: linear-gradient(180deg, #f7d77a, var(--gold) 50%, #9c7419);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; color: #3b2a08;
+  }
+  .crest .lv { font-size: 22px; font-weight: 800; letter-spacing: 2px; margin-top: -12px; }
+  .crest .n { font-family: Cinzel, Georgia, serif; font-size: 66px; font-weight: 800; line-height: 1; }
+  .skill h2 { font-size: 44px; }
+  .skill .sub { font-size: 30px; color: var(--muted); font-weight: 700; margin: 2px 0 14px; }
+  .bar { height: 32px; background: #120f0b; border: 4px solid var(--edge); border-radius: 20px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, #4e9a5a, var(--green)); transition: width 1s; }
+  .pips { display: flex; gap: 12px; margin-bottom: 14px; }
+  .pip { width: 38px; height: 38px; border-radius: 50%; border: 4px solid var(--edge); background: #17130e; }
+  .pip.on { background: var(--green); border-color: #d6f5dc; }
+  .pip.future { opacity: .4; }
+
+  /* Footer */
+  footer { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 30px; color: var(--muted); font-weight: 700; }
+  #streak { color: var(--gold); }
+  #status.warn { color: var(--red); }
+
+  /* Celebration overlay */
+  #celebrate {
+    position: absolute; inset: 0; display: none; z-index: 10;
+    background: radial-gradient(circle, #3a2a0cee 0%, #0f0d0af2 70%);
+    flex-direction: column; align-items: center; justify-content: center; text-align: center;
+  }
+  #celebrate.show { display: flex; }
+  #celebrate .kicker { font-size: 48px; font-weight: 800; color: var(--green); letter-spacing: 6px; }
+  #celebrate .title {
+    font-family: Cinzel, Georgia, serif; font-size: 150px; font-weight: 800; color: var(--gold);
+    text-shadow: 0 0 40px #f2c14e88, 0 6px 0 #000; margin: 16px 0; animation: pop .8s cubic-bezier(.2, 1.6, .4, 1);
+  }
+  #celebrate .sub { font-size: 54px; font-weight: 700; }
+  @keyframes pop { from { transform: scale(.3); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+  .spark { position: absolute; width: 14px; height: 14px; background: var(--gold); border-radius: 50%; animation: fly 2.4s ease-out infinite; }
+  @keyframes fly { from { transform: translate(0, 0) scale(1); opacity: 1; } to { transform: translate(var(--dx), var(--dy)) scale(.2); opacity: 0; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <h1>FITNESS JOURNEY<span id="ribbon">DEMO</span></h1>
+    <div class="date" id="date">&nbsp;</div>
+  </header>
+
+  <section class="panel" id="journey">
+    <div class="top">
+      <div class="label">THE ROAD AHEAD</div>
+      <div id="nextLand">&nbsp;</div>
+    </div>
+    <svg id="map" viewBox="0 0 1700 220" preserveAspectRatio="none"></svg>
+  </section>
+
+  <section class="panel" id="quest">
+    <div class="label" id="questTitle">WEEKLY QUEST: TRAIN 3 DAYS</div>
+    <div class="days" id="days"></div>
+    <div class="count">
+      <span class="big" id="done">0</span>
+      <span class="of" id="of">/ 3 days</span>
+      <span class="msg" id="msg"></span>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="panel skill">
+      <div class="crest"><span class="lv">LEVEL</span><span class="n" id="trainLv">1</span></div>
+      <div>
+        <h2>Training</h2>
+        <div class="sub" id="trainSub">&nbsp;</div>
+        <div class="bar"><div id="trainBar" style="width:0"></div></div>
+      </div>
+    </div>
+    <div class="panel skill">
+      <div class="crest"><span class="lv">LEVEL</span><span class="n" id="dietLv">1</span></div>
+      <div>
+        <h2>Nutrition</h2>
+        <div class="pips" id="dietPips"></div>
+        <div class="bar"><div id="dietBar" style="width:0"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span id="streak">&nbsp;</span>
+    <span id="status">&nbsp;</span>
+  </footer>
+
+  <div id="celebrate">
+    <div class="kicker" id="cKicker"></div>
+    <div class="title" id="cTitle"></div>
+    <div class="sub" id="cSub"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   SETTINGS
+   Page address: https://will-nexav.github.io/home-signage/?sheet=<published CSV link>&goal=3
+   The sheet link lives in the address, so nothing private is in this code.
+   Add &celebrate=1 to preview the level-up animation.
+   ========================================================= */
+const params = new URLSearchParams(location.search);
+const SHEET_CSV_URL = params.get('sheet') || '';
+const WEEKLY_GOAL = Math.max(1, Math.min(7, parseInt(params.get('goal') || '3', 10)));
+const TZ = 'America/New_York';
+const XP_PER_WORKOUT = 100;
+const XP_PER_WEEK_GOAL = 150;   // bonus for completing the weekly quest
+const XP_PER_DIET_DAY = 50;
+const WORKOUTS_PER_LANDMARK = 12; // about one new place a month at 3 days a week
+const LANDMARKS = [
+  'Home Camp', 'Misty Woods', 'Old Mill', 'Stone Bridge', 'River Town', 'Wolf Pass',
+  'Lantern Village', 'Iron Hills', 'Frozen Lake', 'Ember Canyon', 'Sky Fortress', 'Summit of Legends',
+];
+const REFETCH_MINUTES = 5;
+const CELEBRATE_SECONDS = 15;
+const CACHE_KEY = 'fitnessJourney.lastGood';
+const SEEN_KEY = 'fitnessJourney.seen';
+
+/* ---------- Scale the 1920x1080 stage to the screen ---------- */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  document.getElementById('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ---------- Dates, always in New York time ---------- */
+const ymd = d => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+const toDay = s => new Date(s + 'T12:00:00Z');
+const addDays = (s, n) => { const d = toDay(s); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const weekStart = s => addDays(s, -((toDay(s).getUTCDay() + 6) % 7)); // Monday
+
+function parseDate(raw) {
+  raw = (raw || '').trim();
+  let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }
+  return null;
+}
+const yes = v => /^\s*(y|yes|x|true|1|✓|✔|done)/i.test(v || '');
+
+/* ---------- Read the sheet (columns: Date, Workout, Diet) ---------- */
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cells = []; let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true; else if (c === ',') { cells.push(cur); cur = ''; } else cur += c;
+    }
+    cells.push(cur); rows.push(cells);
+  }
+  return rows;
+}
+function toLog(rows) {
+  // Find columns by their header names, so extra columns (like notes) are fine
+  const head = (rows[0] || []).map(h => h.trim().toLowerCase());
+  const col = (name, fallback) => { const i = head.findIndex(h => h.startsWith(name)); return i >= 0 ? i : fallback; };
+  const cDate = col('date', 0), cW = col('workout', 1), cDiet = col('diet', 2);
+  const log = {};
+  for (const r of rows) {
+    const d = parseDate(r[cDate]); if (!d) continue; // skips the header row
+    const e = log[d] || (log[d] = { w: false, diet: false, plan: '' });
+    const w = (r[cW] || '').trim();
+    e.w = e.w || yes(w); e.diet = e.diet || yes(r[cDiet]);
+    // "TBD - Soccer" or "Plan: Soccer" means a planned workout
+    const m = w.match(/^(tbd|plan(ned)?)\s*[-:–]?\s*(.*)$/i);
+    if (m && !e.w) e.plan = m[3] || 'Planned';
+  }
+  return log;
+}
+
+/* ---------- Demo data so the screen is never blank ---------- */
+function demoLog(today) {
+  const log = {}; const pattern = [1, 0, 1, 0, 0, 1, 0];
+  for (let i = 1; i <= 120; i++) {
+    const d = addDays(today, -i), dow = (toDay(d).getUTCDay() + 6) % 7;
+    log[d] = { w: !!pattern[dow], diet: i % 3 !== 0 };
+  }
+  log[today] = { w: true, diet: true };
+  log[addDays(today, 1)] = { w: false, diet: false, plan: 'Soccer' };
+  return log;
+}
+
+/* ---------- Game math ---------- */
+// Level L needs 50 * L * (L - 1) XP: L2 = 100, L3 = 300, L4 = 600, L5 = 1000 ...
+const xpFor = L => 50 * L * (L - 1);
+function level(xp) { let L = 1; while (xp >= xpFor(L + 1)) L++; return { L, cur: xp - xpFor(L), need: xpFor(L + 1) - xpFor(L) }; }
+
+function compute(log, today) {
+  const ws = weekStart(today);
+  const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const weekW = days.filter(d => log[d]?.w).length;
+  const weekDiet = days.filter(d => log[d]?.diet).length;
+  const dates = Object.keys(log).filter(d => d <= today).sort();
+  const totalW = dates.filter(d => log[d].w).length;
+  const totalDiet = dates.filter(d => log[d].diet).length;
+
+  const weeks = {};
+  for (const d of dates) if (log[d].w) { const k = weekStart(d); weeks[k] = (weeks[k] || 0) + 1; }
+  const goalWeeks = Object.values(weeks).filter(n => n >= WEEKLY_GOAL).length;
+  let streak = 0, k = addDays(ws, -7);
+  while ((weeks[k] || 0) >= WEEKLY_GOAL) { streak++; k = addDays(k, -7); }
+  if (weekW >= WEEKLY_GOAL) streak++;
+
+  const pos = Math.min(totalW / WORKOUTS_PER_LANDMARK, LANDMARKS.length - 1);
+  return {
+    today, days, weekW, weekDiet, totalW, streak, pos, log,
+    land: Math.floor(pos),
+    train: level(totalW * XP_PER_WORKOUT + goalWeeks * XP_PER_WEEK_GOAL),
+    diet: level(totalDiet * XP_PER_DIET_DAY),
+  };
+}
+
+/* ---------- Journey map ---------- */
+function drawMap(s) {
+  const W = 1700, SHOW = 5;
+  const start = Math.max(0, Math.min(Math.floor(s.pos) - 1, LANDMARKS.length - SHOW));
+  const X = t => 80 + (t - start) * (W - 160) / (SHOW - 1);
+  const Y = t => 92 + 42 * Math.sin(t * 1.4);
+  const pts = (a, b) => { const out = []; for (let t = a; t <= b + 1e-6; t += 0.04) out.push(`${X(t).toFixed(1)},${Y(t).toFixed(1)}`); return out.join(' '); };
+  const end = start + SHOW - 1;
+  let svg = `<polyline points="${pts(start, end)}" fill="none" stroke="#5a4a32" stroke-width="10" stroke-dasharray="4 22" stroke-linecap="round"/>`;
+  if (s.pos > start) svg += `<polyline points="${pts(start, s.pos)}" fill="none" stroke="#f2c14e" stroke-width="12" stroke-linecap="round"/>`;
+  for (let i = start; i <= end; i++) {
+    const reached = s.pos >= i;
+    svg += `<circle cx="${X(i)}" cy="${Y(i)}" r="22" fill="${reached ? '#f2c14e' : '#17130e'}" stroke="${reached ? '#fff1c2' : '#5a4a32'}" stroke-width="6"/>`;
+    svg += `<text class="land-name ${reached ? 'reached' : ''}" x="${X(i)}" y="${Y(i) + 66}">${LANDMARKS[i]}</text>`;
+  }
+  const hx = X(s.pos), hy = Y(s.pos);
+  svg += `<circle class="halo" cx="${hx}" cy="${hy}" r="34" fill="none" stroke="#7bd389" stroke-width="6"/>`;
+  svg += `<circle cx="${hx}" cy="${hy}" r="26" fill="#7bd389" stroke="#fff" stroke-width="6"/>`;
+  svg += `<text x="${hx}" y="${hy - 44}" text-anchor="middle" font-family="Inter, sans-serif" font-size="28" font-weight="800" fill="#7bd389">YOU</text>`;
+  $('map').innerHTML = svg;
+
+  const next = s.land + 1;
+  $('nextLand').innerHTML = next < LANDMARKS.length
+    ? `Next: <b>${LANDMARKS[next]}</b>, ${next * WORKOUTS_PER_LANDMARK - s.totalW} workouts away`
+    : `<b>You reached the Summit!</b>`;
+}
+
+/* ---------- Draw everything ---------- */
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+function render(s, status, warn) {
+  $('date').textContent = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
+  drawMap(s);
+
+  $('questTitle').textContent = `WEEKLY QUEST: TRAIN ${WEEKLY_GOAL} DAYS`;
+  const names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  $('days').innerHTML = s.days.map((d, i) => {
+    const cls = [s.log[d]?.w ? 'done' : '', d === s.today ? 'today' : '', d > s.today ? 'future' : ''].join(' ');
+    const plan = !s.log[d]?.w && d >= s.today && s.log[d]?.plan;
+    const inner = plan ? `<span class="plan">${esc(plan)}</span>` : '✓';
+    return `<div class="day ${cls} ${plan ? 'planned' : ''}"><div class="shield">${inner}</div><div class="dn">${names[i]}</div></div>`;
+  }).join('');
+  $('done').textContent = s.weekW;
+  $('of').textContent = `/ ${WEEKLY_GOAL} days`;
+  const left = WEEKLY_GOAL - s.weekW;
+  const daysLeft = s.days.filter(d => d >= s.today && !s.log[d]?.w).length;
+  const msg = $('msg'); msg.className = 'msg';
+  if (left <= 0) { msg.textContent = 'QUEST COMPLETE!'; msg.classList.add('complete'); }
+  else if (left > daysLeft) msg.textContent = 'Get one in anyway!';
+  else msg.textContent = `${left} more to go`;
+
+  $('trainLv').textContent = s.train.L;
+  $('trainSub').textContent = `${s.totalW} workout${s.totalW === 1 ? "" : "s"} · ${Math.ceil((s.train.need - s.train.cur) / XP_PER_WORKOUT)} to level ${s.train.L + 1}`;
+  $('trainBar').style.width = (100 * s.train.cur / s.train.need) + '%';
+  $('dietLv').textContent = s.diet.L;
+  $('dietPips').innerHTML = s.days.map(d => `<div class="pip ${s.log[d]?.diet ? 'on' : ''} ${d > s.today ? 'future' : ''}"></div>`).join('');
+  $('dietBar').style.width = (100 * s.diet.cur / s.diet.need) + '%';
+
+  $('streak').textContent = s.streak > 0 ? `Streak: ${s.streak} week${s.streak > 1 ? 's' : ''} hitting your goal` : 'Hit your goal this week to start a streak';
+  $('status').textContent = status;
+  $('status').className = warn ? 'warn' : '';
+}
+
+/* ---------- Celebrate new progress since the TV last checked ---------- */
+function celebrate(kicker, title, sub) {
+  $('cKicker').textContent = kicker; $('cTitle').textContent = title; $('cSub').textContent = sub;
+  const box = $('celebrate');
+  box.querySelectorAll('.spark').forEach(e => e.remove());
+  for (let i = 0; i < 40; i++) {
+    const sp = document.createElement('div'); sp.className = 'spark';
+    const a = Math.random() * Math.PI * 2, r = 400 + Math.random() * 500;
+    sp.style.left = '960px'; sp.style.top = '540px';
+    sp.style.setProperty('--dx', Math.cos(a) * r + 'px'); sp.style.setProperty('--dy', Math.sin(a) * r + 'px');
+    sp.style.animationDelay = (Math.random() * 2.4) + 's';
+    box.appendChild(sp);
+  }
+  box.classList.remove('show'); void box.offsetWidth; box.classList.add('show');
+  clearTimeout(celebrate.t);
+  celebrate.t = setTimeout(() => box.classList.remove('show'), CELEBRATE_SECONDS * 1000);
+}
+function checkProgress(s) {
+  let seen = null;
+  try { seen = JSON.parse(localStorage.getItem(SEEN_KEY)); } catch (e) {}
+  try { localStorage.setItem(SEEN_KEY, JSON.stringify({ w: s.totalW, tl: s.train.L, dl: s.diet.L, land: s.land, quest: s.weekW >= WEEKLY_GOAL ? weekStart(s.today) : null })); } catch (e) {}
+  if (!seen) return;
+  if (s.land > seen.land) celebrate('NEW LAND DISCOVERED', LANDMARKS[s.land], `${s.totalW} workouts into your journey`);
+  else if (s.train.L > seen.tl) celebrate('LEVEL UP!', `Training ${s.train.L}`, 'Keep it going');
+  else if (s.weekW >= WEEKLY_GOAL && seen.quest !== weekStart(s.today)) celebrate('WEEKLY QUEST', 'Complete!', `+${XP_PER_WEEK_GOAL} bonus XP`);
+  else if (s.diet.L > seen.dl) celebrate('LEVEL UP!', `Nutrition ${s.diet.L}`, 'Clean eating pays off');
+  else if (s.totalW > seen.w) celebrate('WORKOUT LOGGED', `+${XP_PER_WORKOUT} XP`, `${Math.ceil((s.train.need - s.train.cur) / XP_PER_WORKOUT)} more to level ${s.train.L + 1}`);
+}
+
+/* ---------- Load data, with fallbacks ---------- */
+async function load() {
+  const today = ymd(new Date());
+  const time = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(new Date());
+  if (!SHEET_CSV_URL) {
+    $('ribbon').style.display = 'inline-block';
+    render(compute(demoLog(today), today), 'Demo data. No sheet connected yet.', true);
+    return;
+  }
+  try {
+    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const log = toLog(parseCSV(await res.text()));
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ log, time })); } catch (e) {}
+    const s = compute(log, today);
+    render(s, `Updated ${time}`);
+    checkProgress(s);
+  } catch (err) {
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) {}
+    if (cached) render(compute(cached.log, today), `Can't reach the sheet. Showing data from ${cached.time}`, true);
+    else { $('ribbon').style.display = 'inline-block'; render(compute(demoLog(today), today), "Can't reach the sheet. Showing demo data", true); }
+  }
+}
+
+load();
+if (params.get('celebrate')) setTimeout(() => celebrate('LEVEL UP!', 'Training 5', 'Keep it going'), 1500);
+setInterval(load, REFETCH_MINUTES * 60 * 1000);
+setTimeout(() => location.reload(), 6 * 60 * 60 * 1000); // full refresh every 6 hours
+</script>
+</body>
+</html>

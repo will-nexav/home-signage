@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #060a11;
+    --panel: #0b121d;
+    --panel-hi: #101a29;
+    --line: #1b2a3e;
+    --text: #e6f0ff;
+    --muted: #7d8fa9;
+    --cyan: #38e1ff;
+    --green: #2ee59d;
+    --red: #ff5c7a;
+    --amber: #ffb547;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
+  body { color: var(--text); font-family: Inter, system-ui, sans-serif; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; font-variant-numeric: tabular-nums; }
+
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1080px;
+    padding: 40px 64px 0;
+    display: grid;
+    grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+    grid-template-rows: auto 1fr 300px 76px;
+    gap: 26px 28px;
+    background:
+      linear-gradient(var(--line) 1px, transparent 1px) 0 0 / 80px 80px,
+      linear-gradient(90deg, var(--line) 1px, transparent 1px) 0 0 / 80px 80px,
+      var(--bg);
+    background-blend-mode: normal;
+  }
+  #stage::before { /* fade the grid so it stays subtle */
+    content: ""; position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 30%, #060a11cc 0%, #060a11f2 70%);
+  }
+  #stage > * { position: relative; }
+  .panel {
+    background: linear-gradient(180deg, var(--panel-hi), var(--panel));
+    border: 2px solid var(--line); border-radius: 16px;
+    box-shadow: 0 0 0 1px #00000066, 0 20px 40px #00000080;
+    padding: 30px 38px;
+  }
+  .label { font-size: 26px; font-weight: 700; letter-spacing: 4px; color: var(--muted); text-transform: uppercase; }
+  .up { color: var(--green); } .down { color: var(--red); } .flat { color: var(--muted); }
+
+  /* Header */
+  header { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; }
+  header h1 { font-size: 60px; font-weight: 800; letter-spacing: 2px; }
+  header h1 span { color: var(--cyan); }
+  .hright { display: flex; align-items: center; gap: 40px; font-size: 38px; color: var(--muted); font-weight: 700; }
+  #clock { color: var(--text); }
+  .live { display: flex; align-items: center; gap: 14px; font-size: 28px; letter-spacing: 3px; color: var(--green); }
+  .live i { width: 18px; height: 18px; border-radius: 50%; background: var(--green); box-shadow: 0 0 16px var(--green); animation: blink 2s infinite; }
+  .live.warn { color: var(--red); } .live.warn i { background: var(--red); box-shadow: 0 0 16px var(--red); }
+  @keyframes blink { 50% { opacity: .25; } }
+  #demo { display: none; background: var(--red); color: #fff; font-size: 24px; letter-spacing: 3px; padding: 6px 16px; border-radius: 8px; }
+
+  /* Net worth hero */
+  #hero { display: grid; grid-template-columns: minmax(0, 1fr) 400px; gap: 30px; align-items: center; }
+  #nw { font-size: 128px; font-weight: 800; letter-spacing: -3px; line-height: 1; margin: 18px 0 14px; text-shadow: 0 0 40px #38e1ff33; }
+  #nwChange { font-size: 33px; font-weight: 700; white-space: nowrap; }
+  .goalrow { display: flex; justify-content: space-between; font-size: 30px; color: var(--muted); font-weight: 700; margin: 34px 0 12px; }
+  .goalrow b { color: var(--text); }
+  .track { height: 26px; background: #0a0f18; border: 2px solid var(--line); border-radius: 14px; overflow: hidden; }
+  .fill { height: 100%; border-radius: 12px; background: linear-gradient(90deg, #1d8fff, var(--cyan)); box-shadow: 0 0 20px #38e1ff88; transition: width 1.2s; }
+  #donut { width: 400px; height: 400px; }
+  #donut text { font-family: "JetBrains Mono", monospace; }
+
+  /* Revenue */
+  #rev { display: flex; flex-direction: column; justify-content: space-between; }
+  #revName { color: var(--amber); }
+  .revtop { display: flex; align-items: center; gap: 34px; }
+  #revRing { width: 230px; height: 230px; flex: none; }
+  #revVal { font-size: 76px; font-weight: 800; letter-spacing: -2px; }
+  #revGoal { font-size: 30px; color: var(--muted); font-weight: 700; margin-top: 6px; }
+  #revChange { font-size: 31px; font-weight: 700; white-space: nowrap; }
+
+  /* Account cards */
+  #cards { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
+  .card { display: flex; flex-direction: column; justify-content: space-between; padding: 26px 30px; border-top: 6px solid var(--c); }
+  .card .name { font-size: 32px; font-weight: 800; display: flex; justify-content: space-between; align-items: center; }
+  .card .name .chg { font-size: 26px; }
+  .card .val { font-size: 58px; font-weight: 800; letter-spacing: -1px; }
+  .card .goal { font-size: 25px; color: var(--muted); font-weight: 700; display: flex; justify-content: space-between; margin-bottom: 10px; }
+  .card .track { height: 18px; }
+  .card .fill { background: var(--c); box-shadow: 0 0 14px var(--c); }
+
+  /* Ticker */
+  #ticker { grid-column: 1 / -1; margin: 0 -64px; border-top: 2px solid var(--line); background: #08101b; overflow: hidden; display: flex; align-items: center; }
+  #tape { display: flex; white-space: nowrap; animation: scroll 40s linear infinite; font-size: 30px; font-weight: 700; }
+  #tape span { padding: 0 44px; }
+  #tape span b { color: var(--muted); margin-right: 14px; }
+  @keyframes scroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <h1>FINANCE<span>.</span></h1>
+    <div class="hright">
+      <span id="demo">DEMO</span>
+      <span class="live" id="live"><i></i><span id="liveText">LIVE</span></span>
+      <span id="date">&nbsp;</span>
+      <span id="clock" class="mono">&nbsp;</span>
+    </div>
+  </header>
+
+  <section class="panel" id="hero">
+    <div>
+      <div class="label">Net Worth</div>
+      <div id="nw" class="mono">&nbsp;</div>
+      <div id="nwChange" class="mono">&nbsp;</div>
+      <div class="goalrow"><span>Goal <b id="nwGoal" class="mono"></b></span><span id="nwPct" class="mono"></span></div>
+      <div class="track"><div class="fill" id="nwFill" style="width:0"></div></div>
+    </div>
+    <svg id="donut" viewBox="0 0 400 400"></svg>
+  </section>
+
+  <section class="panel" id="rev">
+    <div class="label" id="revName">Company Revenue</div>
+    <div class="revtop">
+      <svg id="revRing" viewBox="0 0 230 230"></svg>
+      <div>
+        <div id="revVal" class="mono">&nbsp;</div>
+        <div id="revGoal" class="mono">&nbsp;</div>
+      </div>
+    </div>
+    <div id="revChange" class="mono">&nbsp;</div>
+  </section>
+
+  <section id="cards"></section>
+
+  <div id="ticker"><div id="tape"></div></div>
+</div>
+
+<script>
+/* =========================================================
+   SETTINGS
+   Page address: https://will-nexav.github.io/home-signage/finance/?sheet=<published CSV link>
+   Add &private=1 to hide dollar amounts and show only percentages.
+   Sheet columns (found by header name): Item | Current | Goal | Last Month
+   Any item with "revenue" in its name is shown separately and NOT added to net worth.
+   ========================================================= */
+const params = new URLSearchParams(location.search);
+const SHEET_CSV_URL = params.get('sheet') || '';
+const PRIVATE = params.get('private') === '1';
+const TZ = 'America/New_York';
+const REFETCH_MINUTES = 5;
+const CACHE_KEY = 'finance.lastGood';
+const COLORS = { chase: '#4f8cff', cash: '#2ee59d', btc: '#f7931a', bitcoin: '#f7931a', stock: '#a78bfa', asset: '#38e1ff' };
+const FALLBACK_COLORS = ['#4f8cff', '#2ee59d', '#f7931a', '#a78bfa', '#38e1ff', '#ff7ab6'];
+
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  document.getElementById('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+const $ = id => document.getElementById(id);
+const esc = t => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const num = v => { const n = parseFloat(String(v || '').replace(/[$,\s]/g, '')); return isFinite(n) ? n : null; };
+const MASK = '•••••';
+const full = n => PRIVATE ? MASK : (n < 0 ? '-' : '') + '$' + Math.round(Math.abs(n)).toLocaleString('en-US');
+const compact = n => {
+  if (PRIVATE) return MASK;
+  const a = Math.abs(n), sign = n < 0 ? '-' : '';
+  if (a >= 1e6) return sign + '$' + (a / 1e6).toFixed(2) + 'M';
+  if (a >= 1e3) return sign + '$' + (a / 1e3).toFixed(a >= 1e5 ? 0 : 1) + 'K';
+  return sign + '$' + Math.round(a);
+};
+const pct = (a, b) => b ? Math.max(0, a / b * 100) : 0;
+function change(cur, last) {
+  if (last == null || !last) return { cls: 'flat', txt: '— vs last month', short: '—' };
+  const d = cur - last, p = d / Math.abs(last) * 100;
+  const cls = d > 0 ? 'up' : d < 0 ? 'down' : 'flat', arrow = d > 0 ? '▲' : d < 0 ? '▼' : '■';
+  const money = PRIVATE ? '' : ` ${d >= 0 ? '+' : '-'}${compact(Math.abs(d))}`;
+  return { cls, txt: `${arrow}${money} (${p >= 0 ? '+' : ''}${p.toFixed(1)}%) vs last month`, short: `${arrow} ${Math.abs(p).toFixed(1)}%` };
+}
+const colorFor = (name, i) => { const k = Object.keys(COLORS).find(k => name.toLowerCase().includes(k)); return k ? COLORS[k] : FALLBACK_COLORS[i % FALLBACK_COLORS.length]; };
+
+/* ---------- Read the sheet ---------- */
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cells = []; let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true; else if (c === ',') { cells.push(cur); cur = ''; } else cur += c;
+    }
+    cells.push(cur); rows.push(cells);
+  }
+  return rows;
+}
+function toItems(rows) {
+  const head = (rows[0] || []).map(h => h.trim().toLowerCase());
+  const col = (name, fb) => { const i = head.findIndex(h => h.startsWith(name)); return i >= 0 ? i : fb; };
+  const cI = col('item', 0), cC = col('current', 1), cG = col('goal', 2), cL = col('last', 3);
+  return rows.slice(1).map(r => ({ name: (r[cI] || '').trim(), cur: num(r[cC]), goal: num(r[cG]), last: num(r[cL]) }))
+    .filter(x => x.name && x.cur != null);
+}
+const DEMO = [
+  { name: 'Chase', cur: 18400, goal: 25000, last: 16900 },
+  { name: 'Cash', cur: 6200, goal: 10000, last: 6000 },
+  { name: 'BTC', cur: 41300, goal: 60000, last: 37800 },
+  { name: 'Stocks', cur: 88750, goal: 120000, last: 85100 },
+  { name: 'Assets', cur: 145000, goal: 150000, last: 145000 },
+  { name: 'Company Revenue', cur: 212000, goal: 300000, last: 190500 },
+];
+
+/* ---------- Draw ---------- */
+function ring(svg, size, stroke, segments, center) {
+  const r = (size - stroke) / 2, C = 2 * Math.PI * r, c = size / 2;
+  let out = `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="#132033" stroke-width="${stroke}"/>`;
+  let off = 0;
+  for (const s of segments) {
+    const len = Math.max(0, Math.min(1, s.frac)) * C;
+    const gap = segments.length > 1 ? Math.min(6, len) : 0;
+    out += `<circle cx="${c}" cy="${c}" r="${r}" fill="none" stroke="${s.color}" stroke-width="${stroke}"
+      stroke-dasharray="${Math.max(0, len - gap)} ${C}" stroke-dashoffset="${-off}" transform="rotate(-90 ${c} ${c})"
+      style="filter: drop-shadow(0 0 8px ${s.color}88)" ${segments.length === 1 ? 'stroke-linecap="round"' : ''}/>`;
+    off += len;
+  }
+  svg.innerHTML = out + center;
+}
+
+function render(items, statusText, warn) {
+  const isRev = x => /revenue|company|business/i.test(x.name);
+  const personal = items.filter(x => !isRev(x));
+  const rev = items.find(isRev);
+
+  // Net worth
+  const nw = personal.reduce((a, x) => a + x.cur, 0);
+  const nwGoal = personal.reduce((a, x) => a + (x.goal || 0), 0);
+  const hasLast = personal.some(x => x.last != null);
+  const nwLast = hasLast ? personal.reduce((a, x) => a + (x.last ?? x.cur), 0) : null;
+  const ch = change(nw, nwLast);
+  $('nw').textContent = PRIVATE ? pct(nw, nwGoal).toFixed(1) + '%' : full(nw);
+  $('nwChange').className = 'mono ' + ch.cls; $('nwChange').textContent = ch.txt;
+  $('nwGoal').textContent = PRIVATE ? '' : full(nwGoal);
+  $('nwPct').textContent = pct(nw, nwGoal).toFixed(1) + '% of goal';
+  $('nwFill').style.width = Math.min(100, pct(nw, nwGoal)) + '%';
+
+  // Allocation donut
+  const pos = personal.filter(x => x.cur > 0), tot = pos.reduce((a, x) => a + x.cur, 0) || 1;
+  ring($('donut'), 400, 46, pos.map((x, i) => ({ frac: x.cur / tot, color: colorFor(x.name, personal.indexOf(x)) })),
+    `<text x="200" y="185" text-anchor="middle" font-size="26" font-weight="700" fill="#7d8fa9" letter-spacing="3">ALLOCATION</text>
+     <text x="200" y="235" text-anchor="middle" font-size="44" font-weight="800" fill="#e6f0ff">${pos.length} assets</text>`);
+
+  // Revenue
+  $('rev').style.display = rev ? '' : 'none';
+  if (rev) {
+    const p = pct(rev.cur, rev.goal), rc = change(rev.cur, rev.last);
+    $('revName').textContent = rev.name;
+    ring($('revRing'), 230, 22, [{ frac: p / 100, color: '#ffb547' }],
+      `<text x="115" y="130" text-anchor="middle" font-size="46" font-weight="800" fill="#e6f0ff">${Math.round(p)}%</text>`);
+    $('revVal').textContent = compact(rev.cur);
+    $('revGoal').textContent = rev.goal ? (PRIVATE ? 'of goal' : `of ${compact(rev.goal)} goal`) : '';
+    $('revChange').className = 'mono ' + rc.cls; $('revChange').textContent = rc.txt;
+  }
+
+  // Cards
+  $('cards').innerHTML = personal.slice(0, 5).map((x, i) => {
+    const p = pct(x.cur, x.goal), c = change(x.cur, x.last);
+    return `<div class="panel card" style="--c:${colorFor(x.name, i)}">
+      <div class="name"><span>${esc(x.name)}</span><span class="chg mono ${c.cls}">${c.short}</span></div>
+      <div class="val mono">${PRIVATE ? Math.round(p) + '%' : compact(x.cur)}</div>
+      <div><div class="goal mono"><span>${x.goal ? (PRIVATE ? 'to goal' : 'Goal ' + compact(x.goal)) : 'No goal set'}</span><span>${x.goal && !PRIVATE ? Math.round(p) + '%' : ''}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.min(100, p)}%"></div></div></div>
+    </div>`;
+  }).join('');
+
+  // Ticker (content doubled so the loop is seamless)
+  const tick = items.map(x => { const c = change(x.cur, x.last); return `<span><b>${esc(x.name.toUpperCase())}</b>${PRIVATE ? '' : compact(x.cur) + ' '}<em class="${c.cls}" style="font-style:normal">${c.short}</em></span>`; }).join('')
+    + `<span><b>NET WORTH</b>${PRIVATE ? '' : compact(nw) + ' '}<em class="${ch.cls}" style="font-style:normal">${ch.short}</em></span>`
+    + `<span><b>STATUS</b>${esc(statusText)}</span>`;
+  $('tape').innerHTML = tick + tick;
+  $('tape').classList.add('mono');
+
+  $('live').className = 'live' + (warn ? ' warn' : '');
+  $('liveText').textContent = warn ? 'OFFLINE' : 'LIVE';
+}
+
+function tickClock() {
+  const now = new Date();
+  $('clock').textContent = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(now);
+  $('date').textContent = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'short', month: 'short', day: 'numeric' }).format(now);
+}
+
+async function load() {
+  const time = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(new Date());
+  if (!SHEET_CSV_URL) { $('demo').style.display = 'inline-block'; render(DEMO, 'Demo data. No sheet connected yet', true); return; }
+  try {
+    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const items = toItems(parseCSV(await res.text()));
+    if (!items.length) throw new Error('empty');
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ items, time })); } catch (e) {}
+    render(items, `Updated ${time}`);
+  } catch (err) {
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) {}
+    if (cached) render(cached.items, `Can't reach the sheet. Data from ${cached.time}`, true);
+    else { $('demo').style.display = 'inline-block'; render(DEMO, "Can't reach the sheet. Showing demo data", true); }
+  }
+}
+
+tickClock(); setInterval(tickClock, 20 * 1000);
+load(); setInterval(load, REFETCH_MINUTES * 60 * 1000);
+setTimeout(() => location.reload(), 6 * 60 * 60 * 1000);
+</script>
+</body>
+</html>

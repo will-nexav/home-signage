@@ -18,6 +18,7 @@ Digital signage for Will's home. It runs on an Apple TV through OptiSign. The fi
 Check the page at TV size, then tell Will the URL to load in OptiSign.
 
 ## How it works now
-- `index.html` is the whole fitness screen, a single file with no build step.
-- Data comes from a Google Sheet that's published as a CSV. Columns are found by header name: Date, Workout (Yes / No / "TBD - Soccer" for a planned workout), Notes, Diet (Yes/No). The sheet link goes in the page address (`?sheet=...&goal=3`), never in the code.
-- Game look: an original medieval RPG style with skills, levels and XP. Don't copy any real game's art, names or UI.
+- Each slide is its own folder with a single `index.html` (no build step). OptiSign rotates them in a playlist. The root `index.html` just forwards to `fitness/`.
+- Every slide reads its own Google Sheet, published as a CSV. The sheet link goes in the page address (`?sheet=...`), never in the code. Columns are found by header name.
+- `fitness/`: Fitness Journey. Columns: Date, Workout (Yes / No / "TBD - Soccer" for a planned workout), Notes, Diet (Yes/No). `&goal=3` sets the weekly goal. Look: an original medieval RPG style; don't copy any real game's art, names or UI.
+- `finance/`: Finance. Columns: Item, Current, Goal, Last Month. Items with "revenue" in the name are shown separately and never added to net worth. `&private=1` hides dollar amounts. Look: dark, techy fintech. Money data belongs in Will's personal Google account, not the work one.
