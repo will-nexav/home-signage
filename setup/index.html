@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Slide Link Builder</title>
+<style>
+  :root { --bg: #0b0f16; --panel: #121a26; --line: #22324a; --text: #e6f0ff; --muted: #8a9bb5; --accent: #38e1ff; --green: #2ee59d; --red: #ff5c7a; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.5 Inter, system-ui, sans-serif; padding: 32px 16px; }
+  main { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 30px; margin: 0 0 6px; }
+  p.lead { color: var(--muted); margin: 0 0 28px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 18px; }
+  label { display: block; font-weight: 700; margin-bottom: 8px; }
+  .hint { color: var(--muted); font-size: 14px; margin-top: 6px; }
+  select, input[type=text], input[type=number] {
+    width: 100%; padding: 12px 14px; font: inherit; color: var(--text);
+    background: #0b111b; border: 1px solid var(--line); border-radius: 10px;
+  }
+  .row { display: flex; gap: 10px; align-items: center; margin-top: 4px; }
+  .row input[type=checkbox] { width: 20px; height: 20px; }
+  #out { word-break: break-all; font-family: ui-monospace, monospace; font-size: 14px; background: #0b111b; border: 1px solid var(--line); border-radius: 10px; padding: 14px; min-height: 52px; }
+  .btns { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  button, a.btn { font: inherit; font-weight: 700; padding: 11px 18px; border-radius: 10px; border: 0; cursor: pointer; text-decoration: none; }
+  button { background: var(--accent); color: #04121a; }
+  a.btn { background: transparent; color: var(--accent); border: 1px solid var(--accent); }
+  #msg { margin-top: 10px; font-weight: 700; min-height: 1.5em; }
+  .ok { color: var(--green); } .bad { color: var(--red); }
+  .warn { border-color: #5a3a1a; background: #1d150c; color: #ffcf99; font-size: 15px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Slide Link Builder</h1>
+  <p class="lead">Paste your published sheet link and get the address to put in OptiSign. Everything stays on this page; nothing is sent anywhere.</p>
+
+  <div class="card">
+    <label for="slide">1. Which slide?</label>
+    <select id="slide">
+      <option value="finance">Finance</option>
+      <option value="fitness">Fitness Journey</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <label for="sheet">2. Published sheet link</label>
+    <input id="sheet" type="text" placeholder="https://docs.google.com/spreadsheets/d/e/.../pub?output=csv" autocomplete="off" spellcheck="false">
+    <div class="hint">In Google Sheets: File → Share → Publish to web → pick CSV → Publish, then copy the link.</div>
+  </div>
+
+  <div class="card" id="optFinance">
+    <label>3. Options</label>
+    <div class="row"><input type="checkbox" id="private" checked><span>Privacy mode: show percentages, hide dollar amounts (recommended)</span></div>
+  </div>
+
+  <div class="card" id="optFitness" hidden>
+    <label for="goal">3. Workouts per week goal</label>
+    <input id="goal" type="number" min="1" max="7" value="3">
+  </div>
+
+  <div class="card">
+    <label>Your OptiSign address</label>
+    <div id="out"></div>
+    <div class="btns">
+      <button id="copy">Copy address</button>
+      <a class="btn" id="open" href="#" target="_blank" rel="noopener">Preview it</a>
+    </div>
+    <div id="msg"></div>
+  </div>
+
+  <div class="card warn">
+    Treat this address like a password. Anyone who has it can see the slide. Put it only in OptiSign. If it ever leaks, go to File → Share → Publish to web → Stop publishing, then publish again to get a new link.
+  </div>
+</main>
+
+<script>
+const base = location.href.replace(/setup\/?(index\.html)?(\?.*)?(#.*)?$/, '');
+const $ = id => document.getElementById(id);
+
+function cleanSheet(raw) {
+  let u = raw.trim();
+  if (!u) return { url: '', note: '' };
+  if (!/^https:\/\/docs\.google\.com\/spreadsheets\//.test(u)) return { url: '', note: 'That doesn\'t look like a Google Sheets link.' };
+  // A "Publish to web" web-page link: switch it to the CSV version
+  if (/\/pubhtml/.test(u)) u = u.replace(/\/pubhtml(\?[^#]*)?/, (m, q) => '/pub' + (q ? q + '&' : '?') + 'output=csv');
+  if (/\/d\/e\//.test(u) && /\/pub/.test(u) && !/output=csv/.test(u)) u += (u.includes('?') ? '&' : '?') + 'output=csv';
+  if (!/\/d\/e\//.test(u)) return { url: u, note: 'This looks like a normal sheet link. Use the File → Share → Publish to web link instead.' };
+  return { url: u, note: '' };
+}
+
+function build() {
+  const slide = $('slide').value;
+  $('optFinance').hidden = slide !== 'finance';
+  $('optFitness').hidden = slide !== 'fitness';
+  const { url, note } = cleanSheet($('sheet').value);
+  const p = new URLSearchParams();
+  if (url) p.set('sheet', url);
+  if (slide === 'finance' && $('private').checked) p.set('private', '1');
+  if (slide === 'fitness') p.set('goal', Math.max(1, Math.min(7, parseInt($('goal').value || '3', 10))));
+  const qs = p.toString();
+  const full = base + slide + '/' + (qs ? '?' + qs : '');
+  $('out').textContent = full;
+  $('open').href = full;
+  $('msg').className = note ? 'bad' : '';
+  $('msg').textContent = note || (url ? '' : 'Paste your sheet link above. Without it the slide shows sample data.');
+}
+
+$('copy').onclick = async () => {
+  const t = $('out').textContent;
+  try { await navigator.clipboard.writeText(t); }
+  catch (e) { const r = document.createRange(); r.selectNodeContents($('out')); const s = getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand('copy'); }
+  $('msg').className = 'ok'; $('msg').textContent = 'Copied. Paste it into OptiSign as a Website app.';
+};
+['slide', 'sheet', 'private', 'goal'].forEach(id => $(id).addEventListener('input', build));
+build();
+</script>
+</body>
+</html>
