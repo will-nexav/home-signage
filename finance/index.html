@@ -78,12 +78,16 @@
 
   /* Revenue */
   #rev { display: flex; flex-direction: column; justify-content: space-between; }
-  #revName { color: var(--amber); }
-  .revtop { display: flex; align-items: center; gap: 34px; }
-  #revRing { width: 230px; height: 230px; flex: none; }
-  #revVal { font-size: 76px; font-weight: 800; letter-spacing: -2px; }
-  #revGoal { font-size: 30px; color: var(--muted); font-weight: 700; margin-top: 6px; }
-  #revChange { font-size: 31px; font-weight: 700; white-space: nowrap; }
+  #rev .label { color: var(--amber); }
+  #bizList { flex: 1; display: flex; flex-direction: column; justify-content: space-evenly; }
+  .biz .top { display: flex; justify-content: space-between; align-items: baseline; }
+  .biz .bname { font-size: 36px; font-weight: 800; }
+  .biz .bpct { font-size: 40px; font-weight: 800; color: var(--amber); }
+  .biz .bval { font-size: 54px; font-weight: 800; letter-spacing: -1px; margin: 4px 0 14px; }
+  .biz .bval small { font-size: 28px; color: var(--muted); font-weight: 700; letter-spacing: 0; }
+  .biz .track { height: 20px; }
+  .biz .fill { background: linear-gradient(90deg, #ff8a3d, var(--amber)); box-shadow: 0 0 16px #ffb54788; }
+  .biz.na .bval { color: var(--muted); font-size: 38px; }
 
   /* Account cards */
   #cards { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 24px; }
@@ -127,15 +131,8 @@
   </section>
 
   <section class="panel" id="rev">
-    <div class="label" id="revName">Company Revenue</div>
-    <div class="revtop">
-      <svg id="revRing" viewBox="0 0 230 230"></svg>
-      <div>
-        <div id="revVal" class="mono">&nbsp;</div>
-        <div id="revGoal" class="mono">&nbsp;</div>
-      </div>
-    </div>
-    <div id="revChange" class="mono">&nbsp;</div>
+    <div class="label">Business Revenue</div>
+    <div id="bizList"></div>
   </section>
 
   <section id="cards"></section>
@@ -148,8 +145,10 @@
    SETTINGS
    Page address: https://will-nexav.github.io/home-signage/finance/?sheet=<published CSV link>
    Add &private=1 to hide dollar amounts and show only percentages.
-   Sheet columns (found by header name): Item | Current | Goal | Last Month
-   Any item with "revenue" in its name is shown separately and NOT added to net worth.
+   Sheet columns (found by header name): Item | Group | Current | Goal | Last Month
+   - Accounts with the same Group are added together into one card (max 5 cards).
+   - Group "Revenue" (or "Business") rows show in the revenue panel and are NOT added to net worth.
+   - Group "Goal" sets the net worth goal (put it in the Goal column).
    ========================================================= */
 const params = new URLSearchParams(location.search);
 const SHEET_CSV_URL = params.get('sheet') || '';
@@ -157,7 +156,7 @@ const PRIVATE = params.get('private') === '1';
 const TZ = 'America/New_York';
 const REFETCH_MINUTES = 5;
 const CACHE_KEY = 'finance.lastGood';
-const COLORS = { chase: '#4f8cff', cash: '#2ee59d', btc: '#f7931a', bitcoin: '#f7931a', stock: '#a78bfa', asset: '#38e1ff' };
+const COLORS = { chase: '#4f8cff', cash: '#2ee59d', crypto: '#f7931a', btc: '#f7931a', bitcoin: '#f7931a', stock: '#a78bfa', retire: '#38e1ff', ira: '#38e1ff', asset: '#ff7ab6' };
 const FALLBACK_COLORS = ['#4f8cff', '#2ee59d', '#f7931a', '#a78bfa', '#38e1ff', '#ff7ab6'];
 
 function fit() {
@@ -206,17 +205,22 @@ function parseCSV(text) {
 function toItems(rows) {
   const head = (rows[0] || []).map(h => h.trim().toLowerCase());
   const col = (name, fb) => { const i = head.findIndex(h => h.startsWith(name)); return i >= 0 ? i : fb; };
-  const cI = col('item', 0), cC = col('current', 1), cG = col('goal', 2), cL = col('last', 3);
-  return rows.slice(1).map(r => ({ name: (r[cI] || '').trim(), cur: num(r[cC]), goal: num(r[cG]), last: num(r[cL]) }))
-    .filter(x => x.name && x.cur != null);
+  const cI = col('item', 0), cGr = col('group', -1), cC = col('current', 1), cG = col('goal', 2), cL = col('last', 3);
+  return rows.slice(1).map(r => {
+    const name = (r[cI] || '').trim();
+    return { name, group: (cGr >= 0 && (r[cGr] || '').trim()) || name, cur: num(r[cC]), goal: num(r[cG]), last: num(r[cL]) };
+  }).filter(x => x.name && (x.cur != null || x.goal != null));
 }
-const DEMO = [
-  { name: 'Chase', cur: 18400, goal: 25000, last: 16900 },
-  { name: 'Cash', cur: 6200, goal: 10000, last: 6000 },
-  { name: 'BTC', cur: 41300, goal: 60000, last: 37800 },
-  { name: 'Stocks', cur: 88750, goal: 120000, last: 85100 },
-  { name: 'Assets', cur: 145000, goal: 150000, last: 145000 },
-  { name: 'Company Revenue', cur: 212000, goal: 300000, last: 190500 },
+const DEMO = [ // sample numbers only, never real data
+  { name: 'Checking', group: 'Chase', cur: 18400, goal: 25000, last: 16900 },
+  { name: 'Savings', group: 'Cash', cur: 9200, goal: 15000, last: 8800 },
+  { name: 'BTC', group: 'Crypto', cur: 41300, goal: 60000, last: 37800 },
+  { name: 'ETH', group: 'Crypto', cur: 3100, goal: null, last: 3300 },
+  { name: 'Brokerage', group: 'Stocks', cur: 28750, goal: 40000, last: 27100 },
+  { name: 'IRA', group: 'Retirement', cur: 22000, goal: 30000, last: 21400 },
+  { name: 'Net Worth', group: 'Goal', cur: null, goal: 200000, last: null },
+  { name: 'Business A', group: 'Revenue', cur: 212000, goal: 300000, last: null },
+  { name: 'Business B', group: 'Revenue', cur: null, goal: 500000, last: null },
 ];
 
 /* ---------- Draw ---------- */
@@ -236,18 +240,33 @@ function ring(svg, size, stroke, segments, center) {
 }
 
 function render(items, statusText, warn) {
-  const isRev = x => /revenue|company|business/i.test(x.name);
-  const personal = items.filter(x => !isRev(x));
-  const rev = items.find(isRev);
+  const isRev = x => /revenue|business/i.test(x.group);
+  const isGoal = x => /^goal/i.test(x.group);
+  const accounts = items.filter(x => !isRev(x) && !isGoal(x) && x.cur != null);
+  const biz = items.filter(isRev);
+
+  // Add accounts with the same Group together
+  const groups = [];
+  for (const a of accounts) {
+    let g = groups.find(g => g.name.toLowerCase() === a.group.toLowerCase());
+    if (!g) groups.push(g = { name: a.group, cur: 0, goal: null, last: null, lastAll: true });
+    g.cur += a.cur;
+    if (a.goal != null) g.goal = (g.goal || 0) + a.goal;
+    if (a.last != null) g.last = (g.last || 0) + a.last; else g.lastAll = false;
+  }
+  groups.forEach(g => { if (!g.lastAll) g.last = null; });
+  const personal = groups;
 
   // Net worth
   const nw = personal.reduce((a, x) => a + x.cur, 0);
-  const nwGoal = personal.reduce((a, x) => a + (x.goal || 0), 0);
-  const hasLast = personal.some(x => x.last != null);
-  const nwLast = hasLast ? personal.reduce((a, x) => a + (x.last ?? x.cur), 0) : null;
+  const goalRow = items.find(isGoal);
+  const nwGoal = goalRow ? (goalRow.goal ?? goalRow.cur ?? 0) : personal.reduce((a, x) => a + (x.goal || 0), 0);
+  const nwLast = personal.length && personal.every(x => x.last != null) ? personal.reduce((a, x) => a + x.last, 0) : null;
   const ch = change(nw, nwLast);
-  $('nw').textContent = PRIVATE ? pct(nw, nwGoal).toFixed(1) + '%' : full(nw);
+  $('nw').textContent = PRIVATE ? (nwGoal ? pct(nw, nwGoal).toFixed(1) + '%' : MASK) : full(nw);
   $('nwChange').className = 'mono ' + ch.cls; $('nwChange').textContent = ch.txt;
+  document.querySelector('.goalrow').style.visibility = nwGoal ? '' : 'hidden';
+  document.querySelector('#hero .track').style.visibility = nwGoal ? '' : 'hidden';
   $('nwGoal').textContent = PRIVATE ? '' : full(nwGoal);
   $('nwPct').textContent = pct(nw, nwGoal).toFixed(1) + '% of goal';
   $('nwFill').style.width = Math.min(100, pct(nw, nwGoal)) + '%';
@@ -256,19 +275,18 @@ function render(items, statusText, warn) {
   const pos = personal.filter(x => x.cur > 0), tot = pos.reduce((a, x) => a + x.cur, 0) || 1;
   ring($('donut'), 400, 46, pos.map((x, i) => ({ frac: x.cur / tot, color: colorFor(x.name, personal.indexOf(x)) })),
     `<text x="200" y="185" text-anchor="middle" font-size="26" font-weight="700" fill="#7d8fa9" letter-spacing="3">ALLOCATION</text>
-     <text x="200" y="235" text-anchor="middle" font-size="44" font-weight="800" fill="#e6f0ff">${pos.length} assets</text>`);
+     <text x="200" y="235" text-anchor="middle" font-size="44" font-weight="800" fill="#e6f0ff">${accounts.length} accounts</text>`);
 
-  // Revenue
-  $('rev').style.display = rev ? '' : 'none';
-  if (rev) {
-    const p = pct(rev.cur, rev.goal), rc = change(rev.cur, rev.last);
-    $('revName').textContent = rev.name;
-    ring($('revRing'), 230, 22, [{ frac: p / 100, color: '#ffb547' }],
-      `<text x="115" y="130" text-anchor="middle" font-size="46" font-weight="800" fill="#e6f0ff">${Math.round(p)}%</text>`);
-    $('revVal').textContent = compact(rev.cur);
-    $('revGoal').textContent = rev.goal ? (PRIVATE ? 'of goal' : `of ${compact(rev.goal)} goal`) : '';
-    $('revChange').className = 'mono ' + rc.cls; $('revChange').textContent = rc.txt;
-  }
+  // Business revenue
+  $('rev').style.display = biz.length ? '' : 'none';
+  $('bizList').innerHTML = biz.slice(0, 3).map(b => {
+    if (b.cur == null) return `<div class="biz na"><div class="top"><span class="bname">${esc(b.name)}</span><span class="bpct mono">—</span></div>
+      <div class="bval mono">Not tracked yet${b.goal && !PRIVATE ? ` <small>· goal ${compact(b.goal)}</small>` : ''}</div><div class="track"><div class="fill" style="width:0"></div></div></div>`;
+    const p = pct(b.cur, b.goal);
+    return `<div class="biz"><div class="top"><span class="bname">${esc(b.name)}</span><span class="bpct mono">${b.goal ? Math.round(p) + '%' : ''}</span></div>
+      <div class="bval mono">${compact(b.cur)}${b.goal && !PRIVATE ? ` <small>/ ${compact(b.goal)}</small>` : ''}</div>
+      <div class="track"><div class="fill" style="width:${Math.min(100, p)}%"></div></div></div>`;
+  }).join('');
 
   // Cards
   $('cards').innerHTML = personal.slice(0, 5).map((x, i) => {
@@ -282,7 +300,7 @@ function render(items, statusText, warn) {
   }).join('');
 
   // Ticker (content doubled so the loop is seamless)
-  const tick = items.map(x => { const c = change(x.cur, x.last); return `<span><b>${esc(x.name.toUpperCase())}</b>${PRIVATE ? '' : compact(x.cur) + ' '}<em class="${c.cls}" style="font-style:normal">${c.short}</em></span>`; }).join('')
+  const tick = [...accounts, ...biz.filter(b => b.cur != null)].map(x => { const c = change(x.cur, x.last); return `<span><b>${esc(x.name.toUpperCase())}</b>${PRIVATE ? '' : compact(x.cur) + ' '}<em class="${c.cls}" style="font-style:normal">${c.short}</em></span>`; }).join('')
     + `<span><b>NET WORTH</b>${PRIVATE ? '' : compact(nw) + ' '}<em class="${ch.cls}" style="font-style:normal">${ch.short}</em></span>`
     + `<span><b>STATUS</b>${esc(statusText)}</span>`;
   $('tape').innerHTML = tick + tick;
