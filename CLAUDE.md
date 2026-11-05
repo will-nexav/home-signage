@@ -16,3 +16,8 @@ Digital signage for Will's home. It runs on an Apple TV through OptiSign. The fi
 
 ## Before you finish a change
 Check the page at TV size, then tell Will the URL to load in OptiSign.
+
+## How it works now
+- `index.html` is the whole fitness screen, a single file with no build step.
+- Data comes from a Google Sheet that's published as a CSV. Columns: Date, Workout, Diet (Y/N). The sheet link goes in the page address (`?sheet=...&goal=4`), never in the code.
+- Game look: an original medieval RPG style with skills, levels and XP. Don't copy any real game's art, names or UI.

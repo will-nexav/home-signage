@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fitness Quest</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800&family=Inter:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+  /* ---------- Settings ---------- */
+  :root {
+    --bg: #0f0d0a;
+    --stone: #231e17;
+    --stone-hi: #2f281e;
+    --edge: #5a4a32;
+    --gold: #f2c14e;
+    --gold-dim: #8a6d2c;
+    --text: #f4ead6;
+    --muted: #b3a58a;
+    --green: #7bd389;
+    --red: #e0675a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; background: var(--bg); overflow: hidden; }
+  body { color: var(--text); font-family: Inter, system-ui, sans-serif; }
+
+  /* Fixed 1920x1080 stage, scaled to fit any screen */
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1920px; height: 1080px;
+    transform-origin: center center;
+    padding: 56px 72px;
+    display: grid;
+    grid-template-columns: 1.35fr 1fr;
+    grid-template-rows: auto 1fr auto;
+    gap: 36px 44px;
+    background:
+      radial-gradient(ellipse at 30% 0%, #2a2216 0%, transparent 60%),
+      var(--bg);
+  }
+  .panel {
+    background: linear-gradient(180deg, var(--stone-hi), var(--stone));
+    border: 4px solid var(--edge);
+    border-radius: 18px;
+    box-shadow: inset 0 0 0 2px #00000055, 0 10px 30px #00000088;
+    padding: 36px 44px;
+    position: relative;
+  }
+  h1, h2, .serif { font-family: Cinzel, Georgia, serif; }
+
+  /* ---------- Header ---------- */
+  header { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; }
+  header h1 { font-size: 76px; color: var(--gold); letter-spacing: 4px; text-shadow: 0 4px 0 #00000099; }
+  header .date { font-size: 44px; color: var(--muted); font-weight: 700; }
+
+  /* ---------- Weekly quest ---------- */
+  #quest { display: flex; flex-direction: column; justify-content: space-between; }
+  .label { font-family: Cinzel, Georgia, serif; font-size: 40px; color: var(--gold); letter-spacing: 2px; }
+  .quest-title { font-size: 56px; font-weight: 800; margin-top: 8px; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 22px; margin: 40px 0; }
+  .day { text-align: center; }
+  .shield {
+    height: 150px; border-radius: 16px 16px 60px 60px;
+    border: 5px solid var(--edge); background: #17130e;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 84px; font-weight: 800; color: transparent;
+  }
+  .day.done .shield { background: linear-gradient(180deg, #f7d77a, var(--gold) 55%, #b98a22); border-color: #fff1c2; color: #3b2a08; }
+  .day.today .shield { outline: 6px solid var(--text); outline-offset: 6px; }
+  .day.future .shield { opacity: .45; }
+  .day .dn { font-size: 34px; font-weight: 700; color: var(--muted); margin-top: 14px; }
+  .day.today .dn { color: var(--text); }
+  .count { display: flex; align-items: baseline; gap: 24px; }
+  .count .big { font-size: 170px; font-weight: 800; line-height: .9; color: var(--gold); }
+  .count .of { font-size: 64px; font-weight: 700; color: var(--muted); }
+  .count .msg { font-size: 46px; font-weight: 700; margin-left: auto; text-align: right; max-width: 560px; }
+  .complete { color: var(--green); }
+
+  /* ---------- Skills column ---------- */
+  #skills { display: grid; grid-template-rows: 1.25fr 1fr; gap: 36px; }
+  .skill { display: grid; grid-template-columns: auto 1fr; gap: 36px; align-items: center; }
+  .crest {
+    width: 200px; height: 220px;
+    clip-path: polygon(50% 0, 100% 12%, 100% 60%, 50% 100%, 0 60%, 0 12%);
+    background: linear-gradient(180deg, #f7d77a, var(--gold) 50%, #9c7419);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    color: #3b2a08;
+  }
+  .crest .lv { font-size: 30px; font-weight: 800; letter-spacing: 2px; margin-top: -14px; }
+  .crest .n { font-family: Cinzel, Georgia, serif; font-size: 96px; font-weight: 800; line-height: 1; }
+  .crest.small { width: 150px; height: 165px; }
+  .crest.small .n { font-size: 70px; }
+  .crest.small .lv { font-size: 24px; }
+  .skill h2 { font-size: 54px; color: var(--text); }
+  .skill .sub { font-size: 34px; color: var(--muted); font-weight: 700; margin: 6px 0 22px; }
+  .bar { height: 40px; background: #120f0b; border: 4px solid var(--edge); border-radius: 22px; overflow: hidden; }
+  .bar > div { height: 100%; background: linear-gradient(90deg, #4e9a5a, var(--green)); transition: width 1s; }
+  .bar-note { font-size: 30px; color: var(--muted); font-weight: 700; margin-top: 12px; }
+  .pips { display: flex; gap: 14px; margin-bottom: 18px; }
+  .pip { width: 46px; height: 46px; border-radius: 50%; border: 4px solid var(--edge); background: #17130e; }
+  .pip.on { background: var(--green); border-color: #d6f5dc; }
+  .pip.future { opacity: .4; }
+
+  /* ---------- Footer ---------- */
+  footer { grid-column: 1 / -1; display: flex; justify-content: space-between; font-size: 32px; color: var(--muted); font-weight: 700; }
+  #streak { color: var(--gold); }
+  #status.warn { color: var(--red); }
+  #ribbon {
+    display: none; margin-left: 28px; vertical-align: middle; border-radius: 10px;
+    background: var(--red); color: #fff; font-family: Inter, sans-serif; font-size: 30px; font-weight: 800; padding: 6px 18px; letter-spacing: 3px;
+  }
+</style>
+</head>
+<body>
+<div id="stage">
+  <header>
+    <h1>FITNESS QUEST<span id="ribbon">DEMO</span></h1>
+    <div class="date" id="date">&nbsp;</div>
+  </header>
+
+  <section class="panel" id="quest">
+    <div>
+      <div class="label">THIS WEEK'S QUEST</div>
+      <div class="quest-title" id="questTitle">Train 4 days</div>
+    </div>
+    <div class="days" id="days"></div>
+    <div class="count">
+      <span class="big" id="done">0</span>
+      <span class="of" id="of">/ 4 days</span>
+      <span class="msg" id="msg"></span>
+    </div>
+  </section>
+
+  <section id="skills">
+    <div class="panel skill">
+      <div class="crest"><span class="lv">LEVEL</span><span class="n" id="trainLv">1</span></div>
+      <div>
+        <h2>Training</h2>
+        <div class="sub" id="trainSub">0 workouts total</div>
+        <div class="bar"><div id="trainBar" style="width:0"></div></div>
+        <div class="bar-note" id="trainNote">&nbsp;</div>
+      </div>
+    </div>
+    <div class="panel skill">
+      <div class="crest small"><span class="lv">LEVEL</span><span class="n" id="dietLv">1</span></div>
+      <div>
+        <h2>Nutrition</h2>
+        <div class="sub" id="dietSub">On-plan days this week</div>
+        <div class="pips" id="dietPips"></div>
+        <div class="bar"><div id="dietBar" style="width:0"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <span id="streak">&nbsp;</span>
+    <span id="status">&nbsp;</span>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   SETTINGS
+   The Google Sheet link is passed in the page address, e.g.
+   https://your-site/?sheet=<published CSV link>&goal=4
+   so nothing private is stored in this code.
+   ========================================================= */
+const params = new URLSearchParams(location.search);
+const SHEET_CSV_URL = params.get('sheet') || '';
+const WEEKLY_GOAL = Math.max(1, Math.min(7, parseInt(params.get('goal') || '4', 10)));
+const TZ = 'America/New_York';
+const XP_PER_WORKOUT = 100;
+const XP_PER_WEEK_GOAL = 150;   // bonus for completing the weekly quest
+const XP_PER_DIET_DAY = 50;
+const REFETCH_MINUTES = 5;
+const CACHE_KEY = 'fitnessQuest.lastGood';
+
+/* ---------- Scale the 1920x1080 stage to the screen ---------- */
+function fit() {
+  const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+  document.getElementById('stage').style.transform = `translate(-50%, -50%) scale(${s})`;
+}
+addEventListener('resize', fit); fit();
+
+/* ---------- Dates, always in New York time ---------- */
+const ymd = d => new Intl.DateTimeFormat('en-CA', { timeZone: TZ, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+// Treat a YYYY-MM-DD string as a plain calendar day (noon UTC avoids DST edge cases)
+const toDay = s => new Date(s + 'T12:00:00Z');
+const addDays = (s, n) => { const d = toDay(s); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10); };
+const weekStart = s => { const dow = (toDay(s).getUTCDay() + 6) % 7; return addDays(s, -dow); }; // Monday
+
+function parseDate(raw) {
+  raw = (raw || '').trim();
+  let m = raw.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);
+  if (m) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+  m = raw.match(/^(\d{1,2})\/(\d{1,2})\/(\d{2,4})/);
+  if (m) { const y = m[3].length === 2 ? '20' + m[3] : m[3]; return `${y}-${m[1].padStart(2, '0')}-${m[2].padStart(2, '0')}`; }
+  return null;
+}
+const yes = v => /^\s*(y|yes|x|true|1|✓|✔|done)/i.test(v || '');
+
+/* ---------- Read the sheet (columns: Date, Workout, Diet) ---------- */
+function parseCSV(text) {
+  const rows = [];
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const cells = []; let cur = '', q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; } else if (c === '"') q = false; else cur += c; }
+      else if (c === '"') q = true; else if (c === ',') { cells.push(cur); cur = ''; } else cur += c;
+    }
+    cells.push(cur); rows.push(cells);
+  }
+  return rows;
+}
+function toLog(rows) {
+  const log = {};
+  for (const r of rows) {
+    const d = parseDate(r[0]); if (!d) continue; // skips the header row
+    const e = log[d] || (log[d] = { w: false, diet: false });
+    e.w = e.w || yes(r[1]); e.diet = e.diet || yes(r[2]);
+  }
+  return log;
+}
+
+/* ---------- Demo data so the screen is never blank ---------- */
+function demoLog(today) {
+  const log = {}; const pattern = [1, 0, 1, 1, 0, 1, 0];
+  for (let i = 1; i <= 120; i++) {
+    const d = addDays(today, -i), dow = (toDay(d).getUTCDay() + 6) % 7;
+    log[d] = { w: !!pattern[dow] || i % 11 === 0, diet: i % 3 !== 0 };
+  }
+  log[today] = { w: true, diet: true };
+  return log;
+}
+
+/* ---------- Game math ---------- */
+// Level L needs 50 * L * (L - 1) XP: L2 = 100, L3 = 300, L4 = 600, L5 = 1000 ...
+const xpFor = L => 50 * L * (L - 1);
+function level(xp) { let L = 1; while (xp >= xpFor(L + 1)) L++; return { L, cur: xp - xpFor(L), need: xpFor(L + 1) - xpFor(L) }; }
+
+function compute(log, today) {
+  const ws = weekStart(today);
+  const days = [...Array(7)].map((_, i) => addDays(ws, i));
+  const weekW = days.filter(d => log[d]?.w).length;
+  const weekDiet = days.filter(d => log[d]?.diet).length;
+
+  const dates = Object.keys(log).sort();
+  const totalW = dates.filter(d => log[d].w).length;
+  const totalDiet = dates.filter(d => log[d].diet).length;
+
+  // Count completed weeks (for bonus XP) and the current streak of goal weeks
+  const weeks = {};
+  for (const d of dates) if (log[d].w) { const k = weekStart(d); weeks[k] = (weeks[k] || 0) + 1; }
+  const goalWeeks = Object.values(weeks).filter(n => n >= WEEKLY_GOAL).length;
+  let streak = 0, k = weekStart(addDays(ws, -1));
+  while ((weeks[k] || 0) >= WEEKLY_GOAL) { streak++; k = addDays(k, -7); }
+  if (weekW >= WEEKLY_GOAL) streak++;
+
+  return {
+    today, days, weekW, weekDiet, totalW, streak,
+    train: level(totalW * XP_PER_WORKOUT + goalWeeks * XP_PER_WEEK_GOAL),
+    diet: level(totalDiet * XP_PER_DIET_DAY),
+    log,
+  };
+}
+
+/* ---------- Draw ---------- */
+const $ = id => document.getElementById(id);
+function render(s, status, warn) {
+  const nice = new Intl.DateTimeFormat('en-US', { timeZone: TZ, weekday: 'long', month: 'long', day: 'numeric' }).format(new Date());
+  $('date').textContent = nice;
+  $('questTitle').textContent = `Train ${WEEKLY_GOAL} days`;
+
+  const names = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
+  $('days').innerHTML = s.days.map((d, i) => {
+    const cls = [s.log[d]?.w ? 'done' : '', d === s.today ? 'today' : '', d > s.today ? 'future' : ''].join(' ');
+    return `<div class="day ${cls}"><div class="shield">✓</div><div class="dn">${names[i]}</div></div>`;
+  }).join('');
+
+  $('done').textContent = s.weekW;
+  $('of').textContent = `/ ${WEEKLY_GOAL} days`;
+  const left = WEEKLY_GOAL - s.weekW;
+  const daysLeft = s.days.filter(d => d >= s.today && !s.log[d]?.w).length;
+  const msg = $('msg'); msg.className = 'msg';
+  if (left <= 0) { msg.textContent = 'QUEST COMPLETE!'; msg.classList.add('complete'); }
+  else if (left > daysLeft) msg.textContent = 'Not enough days left. Get one in anyway.';
+  else msg.textContent = `${left} more to go`;
+
+  $('trainLv').textContent = s.train.L;
+  $('trainSub').textContent = `${s.totalW} workouts total`;
+  $('trainBar').style.width = (100 * s.train.cur / s.train.need) + '%';
+  $('trainNote').textContent = `${Math.ceil((s.train.need - s.train.cur) / XP_PER_WORKOUT)} workouts to level ${s.train.L + 1}`;
+
+  $('dietLv').textContent = s.diet.L;
+  $('dietSub').textContent = `${s.weekDiet} on-plan days this week`;
+  $('dietPips').innerHTML = s.days.map(d => `<div class="pip ${s.log[d]?.diet ? 'on' : ''} ${d > s.today ? 'future' : ''}"></div>`).join('');
+  $('dietBar').style.width = (100 * s.diet.cur / s.diet.need) + '%';
+
+  $('streak').textContent = s.streak > 0 ? `Streak: ${s.streak} week${s.streak > 1 ? 's' : ''} hitting your goal` : 'Hit your goal this week to start a streak';
+  $('status').textContent = status;
+  $('status').className = warn ? 'warn' : '';
+}
+
+/* ---------- Load data, with fallbacks ---------- */
+async function load() {
+  const today = ymd(new Date());
+  const time = new Intl.DateTimeFormat('en-US', { timeZone: TZ, hour: 'numeric', minute: '2-digit' }).format(new Date());
+
+  if (!SHEET_CSV_URL) {
+    $('ribbon').style.display = 'inline-block';
+    render(compute(demoLog(today), today), 'Demo data. No sheet connected yet.', true);
+    return;
+  }
+  try {
+    const res = await fetch(SHEET_CSV_URL + (SHEET_CSV_URL.includes('?') ? '&' : '?') + 't=' + Date.now(), { cache: 'no-store' });
+    if (!res.ok) throw new Error(res.status);
+    const log = toLog(parseCSV(await res.text()));
+    try { localStorage.setItem(CACHE_KEY, JSON.stringify({ log, time })); } catch (e) {}
+    render(compute(log, today), `Updated ${time}`);
+  } catch (err) {
+    let cached = null;
+    try { cached = JSON.parse(localStorage.getItem(CACHE_KEY)); } catch (e) {}
+    if (cached) render(compute(cached.log, today), `Can't reach the sheet. Showing data from ${cached.time}`, true);
+    else { $('ribbon').style.display = 'inline-block'; render(compute(demoLog(today), today), "Can't reach the sheet. Showing demo data", true); }
+  }
+}
+
+load();
+setInterval(load, REFETCH_MINUTES * 60 * 1000);
+setTimeout(() => location.reload(), 6 * 60 * 60 * 1000); // full refresh every 6 hours
+</script>
+</body>
+</html>
